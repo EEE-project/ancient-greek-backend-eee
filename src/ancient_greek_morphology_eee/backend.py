@@ -53,7 +53,7 @@ class AncientGreekBackend:
             return self._gi_adj
         raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
 
-    def inflect(self, lemma: str, features: dict[str, str], pos: str) -> set[str]:
+    def inflect(self, lemma: str, features: dict[str, str], pos: str, **_kw) -> set[str]:
         """Map UD FEATS + pos to a set of inflected surface forms.
 
         Args:
