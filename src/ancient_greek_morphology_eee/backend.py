@@ -105,7 +105,12 @@ class AncientGreekBackend:
                 if s and s in cache:
                     result |= cache[s]
             return result
-        return cache.get(suffix, set())
+        result = cache.get(suffix, set())
+        # Two-termination adjectives (e.g. ἀληθής): Pratt lexicon stores only Fem keys for
+        # oblique cases; Masc is identical so fall back to the Fem key when Masc is absent.
+        if not result and pos == "adjective" and suffix and suffix.endswith("M"):
+            result = cache.get(suffix[:-1] + "F", set())
+        return result
 
     def _build_nominal_cache(self, lemma: str, pos: str) -> dict[str, set[str]]:
         gi = self._get_gi(pos)
@@ -116,6 +121,12 @@ class AncientGreekBackend:
                 # store with dot prefix to match ag_noun_key / ag_adj_key output
                 cache["." + csgsuffix] = forms
         return cache
+
+    def list_lemmas(self, pos: str) -> list[str]:
+        if pos not in ("verb", "noun", "adjective"):
+            return []
+        gi = self._get_gi(pos)
+        return sorted(gi.lexicon.lemma_to_stems.keys())
 
     def analyze(self, form: str, pos: str | None = None) -> list[dict[str, str]]:
         """Not implemented in v1. Always raises AnalysisNotSupportedError."""
