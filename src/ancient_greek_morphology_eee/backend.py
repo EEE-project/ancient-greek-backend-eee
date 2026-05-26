@@ -128,11 +128,6 @@ class AncientGreekBackend:
         gi = self._get_gi(pos)
         return sorted(gi.lexicon.lemma_to_stems.keys())
 
-    def analyze(self, form: str, pos: str | None = None) -> list[dict[str, str]]:
-        """Not implemented in v1. Always raises AnalysisNotSupportedError."""
-        from eee import AnalysisNotSupportedError
-        raise AnalysisNotSupportedError("AncientGreekBackend")
-
     def paradigm(self, lemma: str, pos: str) -> dict[str, set[str]]:
         """Return the full paradigm as a dict keyed by TVM/CSG string.
 
