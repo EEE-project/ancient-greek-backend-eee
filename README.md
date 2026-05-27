@@ -1,4 +1,4 @@
-# ancient-greek-morphology-eee
+# ancient-greek-backend-eee
 
 Ancient Greek (ISO 639-2: `grc`) morphology backend for the
 Ελληνικά Εκπαιδευτικά Εργαλεία (EEE) — Greek Language Educational Tools.
@@ -13,14 +13,14 @@ a fork of James Tauber's `greek-inflexion` library.
 ## Installation
 
 ```bash
-pip install "ancient-greek-morphology-eee @ git+https://codeberg.org/EEE-project/ancient-greek-morphology-eee.git"
+pip install "ancient-greek-backend-eee @ git+https://codeberg.org/EEE-project/ancient-greek-backend-eee.git"
 ```
 
 
 ## Usage
 
 ```python
-from ancient_greek_morphology_eee import AncientGreekBackend
+from ancient_greek_backend_eee import AncientGreekBackend
 
 backend = AncientGreekBackend()
 forms = backend.inflect("λύω", {

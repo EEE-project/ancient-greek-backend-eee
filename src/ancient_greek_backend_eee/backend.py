@@ -1,4 +1,4 @@
-from ancient_greek_morphology_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key
+from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key
 
 # All 30 case/number/gender combinations for noun and adjective paradigms
 _CSG_KEYS = [

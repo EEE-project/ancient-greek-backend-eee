@@ -1,7 +1,7 @@
 """Tests for _ag_features.py — UD FEATS → TVM key mapping."""
 import sys
 import pytest
-from ancient_greek_morphology_eee._ag_features import (
+from ancient_greek_backend_eee._ag_features import (
     ag_verb_key, ag_noun_key, ag_adj_key,
     T_PRES, T_IMP, T_AOR, T_FUT, T_PERF, T_PLUP,
     V_ACT, V_MID, V_PASS,

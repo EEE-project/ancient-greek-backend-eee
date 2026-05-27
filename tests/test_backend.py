@@ -1,6 +1,6 @@
 """Integration tests for AncientGreekBackend."""
 import pytest
-from ancient_greek_morphology_eee import AncientGreekBackend
+from ancient_greek_backend_eee import AncientGreekBackend
 
 
 @pytest.fixture(scope="module")

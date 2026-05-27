@@ -5,7 +5,7 @@ Uses eee.register_backend() for local testing — no entry point install needed.
 import pytest
 import eee
 from eee import AnalysisNotSupportedError
-from ancient_greek_morphology_eee import AncientGreekBackend
+from ancient_greek_backend_eee import AncientGreekBackend
 
 
 @pytest.fixture(autouse=True, scope="module")

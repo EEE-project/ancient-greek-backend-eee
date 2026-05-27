@@ -4,7 +4,7 @@ import sys
 
 import pytest
 
-from ancient_greek_morphology_eee import AncientGreekBackend
+from ancient_greek_backend_eee import AncientGreekBackend
 from eee._protocol import MorphologyBackend
 from eee import AnalysisNotSupportedError
 
@@ -34,7 +34,7 @@ def test_analyze_raises():
 
 def test_lazy_load_no_import_on_module_import():
     script = (
-        "import ancient_greek_morphology_eee; "
+        "import ancient_greek_backend_eee; "
         "import sys; "
         "assert 'greek_inflexion_eee' not in sys.modules, "
         "'greek_inflexion_eee was imported at module level'"

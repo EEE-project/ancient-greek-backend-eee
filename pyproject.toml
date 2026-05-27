@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ancient-greek-morphology-eee"
+name = "ancient-greek-backend-eee"
 version = "0.2.0"
 requires-python = ">=3.12"
 dependencies = [
@@ -17,10 +17,10 @@ dev = [
 ]
 
 [project.entry-points."eee.backends.v1"]
-grc = "ancient_greek_morphology_eee:AncientGreekBackend"
+grc = "ancient_greek_backend_eee:AncientGreekBackend"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ancient_greek_morphology_eee"]
+packages = ["src/ancient_greek_backend_eee"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
