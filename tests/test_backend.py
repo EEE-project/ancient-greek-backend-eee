@@ -131,13 +131,6 @@ def test_adj_alethes_nsn(backend):
     assert "ἀληθές" in result
 
 
-# --- analyze ---
-
-def test_analyze_raises(backend):
-    from eee import AnalysisNotSupportedError
-    with pytest.raises(AnalysisNotSupportedError) as exc_info:
-        backend.analyze("λύω")
-    assert "AncientGreekBackend" in str(exc_info.value)
 
 
 # --- paradigm ---

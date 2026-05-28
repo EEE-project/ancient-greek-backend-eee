@@ -122,6 +122,51 @@ class AncientGreekBackend:
                 cache["." + csgsuffix] = forms
         return cache
 
+    def get_slot_templates(
+        self, pos: str, terms_lang: str = "en"
+    ) -> "list | None":
+        """Load slot templates for (pos, terms_lang) from TOML cache.
+
+        Reads from ~/.cache/eee/ancient-greek-backend-eee/slots_grc_{terms_lang}.toml.
+        Falls back to slots_grc_en.toml when terms_lang file is absent.
+        Returns None if no file exists or the pos section is absent.
+        """
+        from pathlib import Path
+        import tomlkit
+        from eee_project._slot_template import SlotTemplate
+
+        cache_dir = Path.home() / ".cache" / "eee" / "ancient-greek-backend-eee"
+        path = cache_dir / f"slots_grc_{terms_lang}.toml"
+        if not path.exists():
+            if terms_lang != "en":
+                path = cache_dir / "slots_grc_en.toml"
+                if not path.exists():
+                    return None
+            else:
+                return None
+
+        doc = tomlkit.loads(path.read_text(encoding="utf-8"))
+        pos_section = doc.get(pos)
+        if pos_section is None:
+            return None
+        raw_slots = pos_section.get("slots")
+        if not raw_slots:
+            return None
+
+        result: list = []
+        for entry in raw_slots:
+            try:
+                features = dict(entry["features"]) if "features" in entry else None
+                result.append(SlotTemplate(
+                    label=str(entry["label"]),
+                    tag_type=str(entry["tag_type"]),
+                    tag=str(entry["tag"]),
+                    features=features,
+                ))
+            except KeyError as exc:
+                raise ValueError(f"Slot entry in {path} missing required field {exc}") from exc
+        return result if result else None
+
     def list_lemmas(self, pos: str) -> list[str]:
         if pos not in ("verb", "noun", "adjective"):
             return []

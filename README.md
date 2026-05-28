@@ -4,7 +4,7 @@ Ancient Greek (ISO 639-2: `grc`) morphology backend for the
 Ελληνικά Εκπαιδευτικά Εργαλεία (EEE) — Greek Language Educational Tools.
 
 Implements `AncientGreekBackend`, satisfying the `MorphologyBackend` protocol
-defined in the [`eee`](https://codeberg.org/EEE-project/eee) package.
+defined in the [`eee`](https://codeberg.org/EEE-project/eee-project) package.
 
 Wraps [greek-inflexion-eee](https://codeberg.org/EEE-project/greek-inflexion-eee),
 a fork of James Tauber's `greek-inflexion` library.
@@ -31,6 +31,14 @@ forms = backend.inflect("λύω", {
 ```
 
 
+Auto-registered via two entry point groups on install:
+- `eee_project.backends.v1` → key `grc` (default backend for Ancient Greek)
+- `eee_project.named_backends.v1` → key `ancient-greek` (selectable via `backend="ancient-greek"`)
+
+This means `eee.inflect(..., language="grc")` and `eee.inflect(..., backend="ancient-greek")`
+both work without explicit registration.
+
+
 ## Development
 
 ```bash
@@ -41,5 +49,6 @@ uv run pytest
 
 ## Status
 
-v0.1.0 — scaffold. `inflect()`, `analyze()`, and `paradigm()` not yet implemented.
-Logic is added in sections 04–05 of the `02-ag-morphology` plan.
+v0.2.0 — implemented. `inflect()`, `paradigm()`, and `list_lemmas()` are available for verbs, nouns, and adjectives.
+
+Coverage is limited to the stems present in the `greek-inflexion-eee` lexicon (Pratt nouns, a small set of verbs and adjectives).

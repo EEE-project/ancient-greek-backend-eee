@@ -13,11 +13,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "eee @ git+https://codeberg.org/EEE-project/eee.git",
+    "eee-project @ git+https://codeberg.org/EEE-project/eee-project.git",
 ]
 
-[project.entry-points."eee.backends.v1"]
+[project.entry-points."eee_project.backends.v1"]
 grc = "ancient_greek_backend_eee:AncientGreekBackend"
+
+[project.entry-points."eee_project.named_backends.v1"]
+ancient-greek = "ancient_greek_backend_eee:AncientGreekBackend"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ancient_greek_backend_eee"]
