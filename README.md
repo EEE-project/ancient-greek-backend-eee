@@ -41,5 +41,6 @@ uv run pytest
 
 ## Status
 
-v0.1.0 — scaffold. `inflect()`, `analyze()`, and `paradigm()` not yet implemented.
-Logic is added in sections 04–05 of the `02-ag-morphology` plan.
+v0.2.0 — implemented. `inflect()`, `paradigm()`, and `list_lemmas()` are available for verbs, nouns, and adjectives.
+
+Coverage is limited to the stems present in the `greek-inflexion-eee` lexicon (Pratt nouns, a small set of verbs and adjectives).
