@@ -22,13 +22,40 @@ pip install "ancient-greek-backend-eee @ git+https://codeberg.org/EEE-project/an
 ```python
 from ancient_greek_backend_eee import AncientGreekBackend
 
+# Default: Pratt lexicon (20 teaching verbs)
 backend = AncientGreekBackend()
-forms = backend.inflect("λύω", {
+
+# Corpus lexicon — by name
+backend = AncientGreekBackend(lexicons=["homer"])
+
+# Merged corpora
+backend = AncientGreekBackend(lexicons=["homer", "lxx", "morphgnt"])
+
+# Custom lexicon file (absolute path, same YAML format)
+backend = AncientGreekBackend(lexicons=["pratt", "/path/to/my_course.yaml"])
+
+forms = backend.inflect("ἀκούω", {
     "VerbForm": "Fin", "Tense": "Pres", "Voice": "Act",
-    "Mood": "Ind", "Person": "1", "Number": "Sing"
+    "Mood": "Imp", "Person": "2", "Number": "Sing"
 }, "verb")
-# {"λύω"}
+# {"ἄκουε"}
 ```
+
+### Lexicon flavors
+
+The `lexicons` parameter selects which verb vocabulary the backend can inflect.
+Nouns and adjectives always use the bundled Pratt paradigm lexicon.
+
+| Name | Verbs | Source | Period / dialect |
+|------|------:|--------|-----------------|
+| `"pratt"` (default) | 20 | Pratt textbook | teaching |
+| `"dik"` | 10 | Dik textbook | teaching |
+| `"ltrg"` | 34 | LTRG textbook | teaching |
+| `"homer"` | 2335 | Homeric corpus | Epic/Ionic, ~800 BCE |
+| `"lxx"` | 1905 | Septuagint | Biblical κοινή, ~250–100 BCE |
+| `"morphgnt"` | 1848 | New Testament | κοινή, ~1st c. CE |
+
+Multiple names are merged additively. Absolute file paths load custom YAML lexicons.
 
 
 Auto-registered via two entry point groups on install:
@@ -49,6 +76,5 @@ uv run pytest
 
 ## Status
 
-v0.2.0 — implemented. `inflect()`, `paradigm()`, and `list_lemmas()` are available for verbs, nouns, and adjectives.
-
-Coverage is limited to the stems present in the `greek-inflexion-eee` lexicon (Pratt nouns, a small set of verbs and adjectives).
+v0.2.1 — `inflect()`, `paradigm()`, and `list_lemmas()` for verbs, nouns, and adjectives.
+Verb coverage depends on the selected lexicon(s); nouns and adjectives use the Pratt paradigm lexicon.

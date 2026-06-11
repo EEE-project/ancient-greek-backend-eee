@@ -1,4 +1,9 @@
+import csv
+import importlib.resources as _pkg_data
+
 from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key
+
+_POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv", "verb": "verb-tags.tsv"}
 
 # All 30 case/number/gender combinations for noun and adjective paradigms
 _CSG_KEYS = [
@@ -13,6 +18,7 @@ _VERB_TENSES  = list("PIAFX")   # Pres, Imp, Aor, Fut, Perf
 _VERB_VOICES  = list("AMP")
 _VERB_PERSONS = ["1S", "2S", "3S", "1P", "2P", "3P"]
 _VERB_IMP_PN  = ["2S", "3S", "2P", "3P"]
+_VERB_TAGS = {"final-nu-aai.3s"}
 
 
 class AncientGreekBackend:
@@ -31,17 +37,22 @@ class AncientGreekBackend:
 
     language = "grc"
 
-    def __init__(self) -> None:
+    def __init__(
+        self, lexicons: "tuple[str, ...] | list[str]" = ("pratt",)
+    ) -> None:
+        self._lexicons = tuple(lexicons)
         self._gi_verb = None
         self._gi_noun = None
         self._gi_adj  = None
         self._paradigm_cache: dict[tuple[str, str], dict[str, set[str]]] = {}
+        self._slot_cache: dict[tuple[str, str], list] = {}
+        self._tag_cache: dict[str, list] = {}
 
     def _get_gi(self, pos: str):
-        from greek_inflexion_eee import load_default, load_noun_default, load_adj_default
+        from greek_inflexion_eee import load_lexicons, load_noun_default, load_adj_default
         if pos == "verb":
             if self._gi_verb is None:
-                self._gi_verb = load_default()
+                self._gi_verb = load_lexicons(list(self._lexicons))
             return self._gi_verb
         if pos == "noun":
             if self._gi_noun is None:
@@ -82,10 +93,10 @@ class AncientGreekBackend:
             key_mid  = ag_verb_key({**features, "Voice": "Mid"})
             key_pass = ag_verb_key({**features, "Voice": "Pass"})
             return (
-                set(gi.generate(lemma, key_mid).keys()) |
-                set(gi.generate(lemma, key_pass).keys())
+                set(gi.generate(lemma, key_mid, tags=_VERB_TAGS).keys()) |
+                set(gi.generate(lemma, key_pass, tags=_VERB_TAGS).keys())
             )
-        return set(gi.generate(lemma, key).keys())
+        return set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
 
     def _inflect_nominal(self, lemma: str, features: dict[str, str], pos: str) -> set[str]:
         cache_key = (lemma, pos)
@@ -123,17 +134,23 @@ class AncientGreekBackend:
         return cache
 
     def get_slot_templates(
-        self, pos: str, terms_lang: str = "en"
+        self, lang: str, pos: str, terms_lang: str = "en"
     ) -> "list | None":
         """Load slot templates for (pos, terms_lang) from TOML cache.
 
         Reads from ~/.cache/eee/ancient-greek-backend-eee/slots_grc_{terms_lang}.toml.
         Falls back to slots_grc_en.toml when terms_lang file is absent.
         Returns None if no file exists or the pos section is absent.
+        Converts legacy 'ag' tag_type entries to 'ud' using the tag→features
+        rows from get_tags(). Parsed results are cached per (pos, terms_lang).
         """
         from pathlib import Path
         import tomlkit
         from eee_project._slot_template import SlotTemplate
+
+        cache_key = (pos, terms_lang)
+        if cache_key in self._slot_cache:
+            return self._slot_cache[cache_key]
 
         cache_dir = Path.home() / ".cache" / "eee" / "ancient-greek-backend-eee"
         path = cache_dir / f"slots_grc_{terms_lang}.toml"
@@ -153,19 +170,55 @@ class AncientGreekBackend:
         if not raw_slots:
             return None
 
+        ud_by_tag: "dict[str, dict[str, str]] | None" = None
         result: list = []
         for entry in raw_slots:
             try:
-                features = dict(entry["features"]) if "features" in entry else None
+                tag = str(entry["tag"])
+                tag_type = str(entry["tag_type"])
+                if "features" in entry:
+                    features = dict(entry["features"])
+                elif tag_type == "ag":
+                    if ud_by_tag is None:
+                        ud_by_tag = {
+                            r["tag"]: {k: v for k, v in r.items() if k != "tag"}
+                            for r in self.get_tags(pos)
+                        }
+                    features = ud_by_tag.get(tag)
+                    tag_type = "ud"
+                else:
+                    features = None
                 result.append(SlotTemplate(
                     label=str(entry["label"]),
-                    tag_type=str(entry["tag_type"]),
-                    tag=str(entry["tag"]),
+                    tag_type=tag_type,
+                    tag=tag,
                     features=features,
                 ))
             except KeyError as exc:
                 raise ValueError(f"Slot entry in {path} missing required field {exc}") from exc
-        return result if result else None
+        if result:
+            self._slot_cache[cache_key] = result
+            return result
+        return None
+
+    def get_tags(self, pos: str) -> list[dict[str, str]]:
+        """Return tag→features rows for pos as a list of dicts.
+
+        Each dict has a 'tag' key plus UD feature keys (Case, Number, Gender,
+        Tense, VerbForm, Voice, Mood, Person, Number).  Empty cells are omitted.
+        Returns [] for unknown pos. Results are cached per pos.
+        """
+        if pos in self._tag_cache:
+            return self._tag_cache[pos]
+        filename = _POS_TSV.get(pos)
+        if filename is None:
+            return []
+        data_pkg = _pkg_data.files("ancient_greek_backend_eee.data")
+        text = (data_pkg / filename).read_text(encoding="utf-8")
+        reader = csv.DictReader(text.splitlines(), delimiter="\t")
+        result = [{k: v for k, v in row.items() if v} for row in reader]
+        self._tag_cache[pos] = result
+        return result
 
     def list_lemmas(self, pos: str) -> list[str]:
         if pos not in ("verb", "noun", "adjective"):
@@ -197,24 +250,24 @@ class AncientGreekBackend:
                 for m in "ISO":
                     for pn in _VERB_PERSONS:
                         key = f"{t}{v}{m}.{pn}"
-                        forms = set(gi.generate(lemma, key).keys())
+                        forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                         if forms:
                             result[key] = forms
                 # imperative
                 for pn in _VERB_IMP_PN:
                     key = f"{t}{v}D.{pn}"
-                    forms = set(gi.generate(lemma, key).keys())
+                    forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                     if forms:
                         result[key] = forms
                 # infinitive
                 key = f"{t}{v}N"
-                forms = set(gi.generate(lemma, key).keys())
+                forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                 if forms:
                     result[key] = forms
                 # participle (nom/gen sg all genders)
                 for csg in ["NSM", "NSF", "NSN", "GSM", "GSF", "GSN"]:
                     key = f"{t}{v}P.{csg}"
-                    forms = set(gi.generate(lemma, key).keys())
+                    forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                     if forms:
                         result[key] = forms
         return result

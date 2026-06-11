@@ -170,6 +170,77 @@ def test_inflect_missing_feature_raises(backend):
         backend.inflect("λύω", {"Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
 
 
+# --- get_tags ---
+
+def test_get_tags_noun_row_count(backend):
+    assert len(backend.get_tags("noun")) == 30
+
+
+def test_get_tags_adj_row_count(backend):
+    assert len(backend.get_tags("adjective")) == 30
+
+
+def test_get_tags_verb_row_count(backend):
+    assert len(backend.get_tags("verb")) == 88
+
+
+def test_get_tags_unknown_pos_returns_empty(backend):
+    assert backend.get_tags("particle") == []
+
+
+def test_get_tags_noun_all_rows_have_tag_case_number_gender(backend):
+    tags = backend.get_tags("noun")
+    for t in tags:
+        assert {"tag", "Case", "Number", "Gender"} == set(t.keys())
+
+
+def test_get_tags_verb_finite_rows_have_full_keys(backend):
+    tags = backend.get_tags("verb")
+    finites = [t for t in tags if t.get("VerbForm") == "Fin"]
+    assert finites
+    for t in finites:
+        assert {"tag", "Tense", "VerbForm", "Voice", "Mood", "Person", "Number"} == set(t.keys())
+
+
+def test_get_tags_verb_infinitive_rows_lack_mood_person_number(backend):
+    tags = backend.get_tags("verb")
+    infinitives = [t for t in tags if t.get("VerbForm") == "Inf"]
+    assert infinitives
+    for t in infinitives:
+        assert "Mood" not in t
+        assert "Person" not in t
+        assert "Number" not in t
+
+
+def test_get_tags_noun_roundtrip_theos(backend):
+    """inflect() with features from get_tags() never raises for θεός (masculine)."""
+    for t in backend.get_tags("noun"):
+        feats = {k: v for k, v in t.items() if k != "tag"}
+        result = backend.inflect("θεός", feats, "noun")
+        assert isinstance(result, set)
+
+
+def test_get_tags_verb_roundtrip_lyoo(backend):
+    """inflect() with features from get_tags() never raises for λύω."""
+    for t in backend.get_tags("verb"):
+        feats = {k: v for k, v in t.items() if k != "tag"}
+        result = backend.inflect("λύω", feats, "verb")
+        assert isinstance(result, set)
+
+
+def test_get_tags_noun_first_row(backend):
+    tags = backend.get_tags("noun")
+    assert tags[0] == {"tag": ".NSM", "Case": "Nom", "Number": "Sing", "Gender": "Masc"}
+
+
+def test_get_tags_verb_first_row(backend):
+    tags = backend.get_tags("verb")
+    assert tags[0] == {
+        "tag": "PAI.1S", "Tense": "Pres", "VerbForm": "Fin",
+        "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing",
+    }
+
+
 # --- caching: second call returns consistent results ---
 
 def test_noun_cache_consistent(backend):
@@ -177,3 +248,53 @@ def test_noun_cache_consistent(backend):
     r2 = backend.inflect("θεός", {"Case": "Gen", "Number": "Sing", "Gender": "Masc"}, "noun")
     assert "θεός" in r1
     assert "θεοῦ" in r2
+
+
+# --- lexicon selection ---
+
+IMP_2S = {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Imp", "Person": "2", "Number": "Sing"}
+IMP_2P = {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Imp", "Person": "2", "Number": "Plur"}
+
+
+def test_default_lexicon_is_pratt():
+    b = AncientGreekBackend()
+    assert b._lexicons == ("pratt",)
+
+
+def test_homer_lexicon_akouo_imperative():
+    b = AncientGreekBackend(lexicons=["homer"])
+    assert "ἄκουε" in b.inflect("ἀκούω", IMP_2S, "verb")
+
+
+def test_homer_lexicon_akouo_imperative_plural():
+    b = AncientGreekBackend(lexicons=["homer"])
+    assert "ἀκούετε" in b.inflect("ἀκούω", IMP_2P, "verb")
+
+
+def test_homer_lexicon_pauō_imperative():
+    b = AncientGreekBackend(lexicons=["homer"])
+    assert "παῦε" in b.inflect("παύω", IMP_2S, "verb")
+
+
+def test_homer_lexicon_anagignwskw_imperative():
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.inflect("ἀναγιγνώσκω", IMP_2S, "verb")
+    assert result
+    assert any("γνωσκ" in f for f in result)
+
+
+def test_merged_homer_lxx():
+    b = AncientGreekBackend(lexicons=["homer", "lxx"])
+    assert "λέγε" in b.inflect("λέγω", IMP_2S, "verb")
+
+
+def test_list_lemmas_homer_includes_akouo():
+    b = AncientGreekBackend(lexicons=["homer"])
+    assert "ἀκούω" in b.list_lemmas("verb")
+
+
+def test_default_still_works_after_lexicon_param():
+    b = AncientGreekBackend()
+    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act",
+                               "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
+    assert result
