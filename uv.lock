@@ -4,7 +4,7 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "ancient-greek-backend-eee"
-version = "0.2.1"
+version = "0.2.2"
 source = { editable = "." }
 dependencies = [
     { name = "greek-inflexion-eee" },
@@ -17,7 +17,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "greek-inflexion-eee", editable = "../../../../../../../home/sadov/work/greek/git/codeberg.org/greek-inflexion-eee" }]
+requires-dist = [{ name = "greek-inflexion-eee", git = "https://codeberg.org/EEE-project/greek-inflexion-eee.git" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -147,22 +147,12 @@ wheels = [
 [[package]]
 name = "greek-inflexion-eee"
 version = "0.1.2"
-source = { editable = "../../../../../../../home/sadov/work/greek/git/codeberg.org/greek-inflexion-eee" }
+source = { git = "https://codeberg.org/EEE-project/greek-inflexion-eee.git#681d2aca68071411cc9079040a49e035c3d758e2" }
 dependencies = [
     { name = "greek-accentuation" },
     { name = "inflexion" },
     { name = "pyyaml" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "greek-accentuation" },
-    { name = "inflexion", specifier = ">=0.8.0" },
-    { name = "pyyaml" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest" }]
 
 [[package]]
 name = "h11"

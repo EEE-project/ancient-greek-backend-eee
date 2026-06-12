@@ -153,6 +153,22 @@ def test_paradigm_adj_returns_dict(backend):
     assert result
 
 
+def test_paradigm_adj_adverb_regular(backend):
+    result = backend.paradigm("καλός", "adjective")
+    assert result.get("ADV") == {"καλῶς"}
+
+
+def test_paradigm_adj_adverb_agathos(backend):
+    result = backend.paradigm("ἀγαθός", "adjective")
+    assert result.get("ADV") == {"ἀγαθῶς"}
+
+
+def test_paradigm_adj_adverb_no_match(backend):
+    # ἀληθής ends in -ής, not -ος → no adverb derived
+    result = backend.paradigm("ἀληθής", "adjective")
+    assert "ADV" not in result
+
+
 def test_paradigm_unknown_pos_raises(backend):
     with pytest.raises(ValueError):
         backend.paradigm("λύω", "unknown_pos")

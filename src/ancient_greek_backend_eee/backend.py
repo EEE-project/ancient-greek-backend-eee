@@ -131,7 +131,20 @@ class AncientGreekBackend:
             if forms:
                 # store with dot prefix to match ag_noun_key / ag_adj_key output
                 cache["." + csgsuffix] = forms
+        if pos == "adjective":
+            adv = self._derive_adverb(lemma)
+            if adv:
+                cache["ADV"] = adv
         return cache
+
+    @staticmethod
+    def _derive_adverb(lemma: str) -> set[str]:
+        """Derive adverb from adjective lemma. Handles regular -ος/-ός → -ῶς."""
+        import unicodedata
+        nfc = unicodedata.normalize("NFC", lemma)
+        if nfc.endswith("ός") or nfc.endswith("ος"):
+            return {nfc[:-2] + "ῶς"}
+        return set()
 
     def get_slot_templates(
         self, lang: str, pos: str, terms_lang: str = "en"
