@@ -146,18 +146,40 @@ class AncientGreekBackend:
             return {nfc[:-2] + "ῶς"}
         return set()
 
+    def _load_slots_toml(self, terms_lang: str) -> "str | None":
+        """Return TOML text for slots_grc_{terms_lang}.toml.
+
+        Checks ~/.cache override first, then falls back to bundled package data.
+        Falls back to 'en' when the requested language file is absent.
+        """
+        from pathlib import Path
+        candidates = [f"slots_grc_{terms_lang}.toml"]
+        if terms_lang != "en":
+            candidates.append("slots_grc_en.toml")
+        cache_dir = Path.home() / ".cache" / "eee" / "ancient-greek-backend-eee"
+        for name in candidates:
+            p = cache_dir / name
+            if p.exists():
+                return p.read_text(encoding="utf-8")
+        slots_pkg = _pkg_data.files("ancient_greek_backend_eee.data") / "slots"
+        for name in candidates:
+            try:
+                return (slots_pkg / name).read_text(encoding="utf-8")
+            except Exception:
+                pass
+        return None
+
     def get_slot_templates(
         self, lang: str, pos: str, terms_lang: str = "en"
     ) -> "list | None":
-        """Load slot templates for (pos, terms_lang) from TOML cache.
+        """Load slot templates for (pos, terms_lang).
 
-        Reads from ~/.cache/eee/ancient-greek-backend-eee/slots_grc_{terms_lang}.toml.
-        Falls back to slots_grc_en.toml when terms_lang file is absent.
+        Reads from ~/.cache override or bundled package data.
+        Falls back to slots_grc_en.toml when the requested language file is absent.
         Returns None if no file exists or the pos section is absent.
-        Converts legacy 'ag' tag_type entries to 'ud' using the tag→features
-        rows from get_tags(). Parsed results are cached per (pos, terms_lang).
+        Converts 'ag' tag_type entries to 'ud' using the tag→features rows from
+        get_tags(). Parsed results are cached per (pos, terms_lang).
         """
-        from pathlib import Path
         import tomlkit
         from eee_project._slot_template import SlotTemplate
 
@@ -165,17 +187,11 @@ class AncientGreekBackend:
         if cache_key in self._slot_cache:
             return self._slot_cache[cache_key]
 
-        cache_dir = Path.home() / ".cache" / "eee" / "ancient-greek-backend-eee"
-        path = cache_dir / f"slots_grc_{terms_lang}.toml"
-        if not path.exists():
-            if terms_lang != "en":
-                path = cache_dir / "slots_grc_en.toml"
-                if not path.exists():
-                    return None
-            else:
-                return None
+        text = self._load_slots_toml(terms_lang)
+        if text is None:
+            return None
 
-        doc = tomlkit.loads(path.read_text(encoding="utf-8"))
+        doc = tomlkit.loads(text)
         pos_section = doc.get(pos)
         if pos_section is None:
             return None
@@ -208,7 +224,7 @@ class AncientGreekBackend:
                     features=features,
                 ))
             except KeyError as exc:
-                raise ValueError(f"Slot entry in {path} missing required field {exc}") from exc
+                raise ValueError(f"Slot entry missing required field {exc}") from exc
         if result:
             self._slot_cache[cache_key] = result
             return result

@@ -1,0 +1,307 @@
+# Ancient Greek backend slot templates — English labels
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSM"
+label = "Nom. Sg. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPM"
+label = "Nom. Pl. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSF"
+label = "Nom. Sg. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPF"
+label = "Nom. Pl. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSN"
+label = "Nom. Sg. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPN"
+label = "Nom. Pl. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSM"
+label = "Gen. Sg. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPM"
+label = "Gen. Pl. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSF"
+label = "Gen. Sg. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPF"
+label = "Gen. Pl. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSN"
+label = "Gen. Sg. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPN"
+label = "Gen. Pl. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSM"
+label = "Dat. Sg. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPM"
+label = "Dat. Pl. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSF"
+label = "Dat. Sg. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPF"
+label = "Dat. Pl. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSN"
+label = "Dat. Sg. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPN"
+label = "Dat. Pl. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASM"
+label = "Acc. Sg. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APM"
+label = "Acc. Pl. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASF"
+label = "Acc. Sg. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APF"
+label = "Acc. Pl. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASN"
+label = "Acc. Sg. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APN"
+label = "Acc. Pl. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSM"
+label = "Voc. Sg. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPM"
+label = "Voc. Pl. m."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSF"
+label = "Voc. Sg. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPF"
+label = "Voc. Pl. f."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSN"
+label = "Voc. Sg. n."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPN"
+label = "Voc. Pl. n."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1S"
+label = "Pres. Act. Ind. 1 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2S"
+label = "Pres. Act. Ind. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3S"
+label = "Pres. Act. Ind. 3 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1P"
+label = "Pres. Act. Ind. 1 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2P"
+label = "Pres. Act. Ind. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3P"
+label = "Pres. Act. Ind. 3 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1S"
+label = "Impf. Act. Ind. 1 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2S"
+label = "Impf. Act. Ind. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3S"
+label = "Impf. Act. Ind. 3 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1P"
+label = "Impf. Act. Ind. 1 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2P"
+label = "Impf. Act. Ind. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3P"
+label = "Impf. Act. Ind. 3 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1S"
+label = "Aor. Act. Ind. 1 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2S"
+label = "Aor. Act. Ind. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3S"
+label = "Aor. Act. Ind. 3 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1P"
+label = "Aor. Act. Ind. 1 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2P"
+label = "Aor. Act. Ind. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3P"
+label = "Aor. Act. Ind. 3 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1S"
+label = "Fut. Act. Ind. 1 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2S"
+label = "Fut. Act. Ind. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3S"
+label = "Fut. Act. Ind. 3 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1P"
+label = "Fut. Act. Ind. 1 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2P"
+label = "Fut. Act. Ind. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3P"
+label = "Fut. Act. Ind. 3 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2S"
+label = "Pres. Act. Imp. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2P"
+label = "Pres. Act. Imp. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2S"
+label = "Aor. Act. Imp. 2 Sg."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2P"
+label = "Aor. Act. Imp. 2 Pl."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAN"
+label = "Pres. Act. Inf."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAN"
+label = "Aor. Act. Inf."
+
+# Adjective: derived forms
+[[adjective.slots]]
+tag_type = "ag-paradigm"
+tag = "ADV"
+label = "Adverb"

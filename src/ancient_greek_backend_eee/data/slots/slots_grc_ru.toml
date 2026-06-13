@@ -1,0 +1,318 @@
+# Ancient Greek backend slot templates — Russian labels
+# Noun/adjective tags: .{CASE}{NUMBER}{GENDER}  (CASE: N G D A V; NUMBER: S P; GENDER: M F N)
+# Verb tags: {TENSE}{VOICE}{MOOD}.{PERSON}{NUMBER}
+#   Tense: P=Pres I=Impf A=Aor F=Fut X=Perf
+#   Voice: A=Act M=Mid P=Pass
+#   Mood: I=Ind S=Subj O=Opt D=Imp N=Inf
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSM"
+label = "Именит. ед. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPM"
+label = "Именит. мн. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSF"
+label = "Именит. ед. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPF"
+label = "Именит. мн. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSN"
+label = "Именит. ед. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPN"
+label = "Именит. мн. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSM"
+label = "Родит. ед. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPM"
+label = "Родит. мн. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSF"
+label = "Родит. ед. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPF"
+label = "Родит. мн. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSN"
+label = "Родит. ед. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPN"
+label = "Родит. мн. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSM"
+label = "Дат. ед. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPM"
+label = "Дат. мн. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSF"
+label = "Дат. ед. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPF"
+label = "Дат. мн. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSN"
+label = "Дат. ед. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPN"
+label = "Дат. мн. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASM"
+label = "Вин. ед. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APM"
+label = "Вин. мн. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASF"
+label = "Вин. ед. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APF"
+label = "Вин. мн. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASN"
+label = "Вин. ед. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APN"
+label = "Вин. мн. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSM"
+label = "Зват. ед. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPM"
+label = "Зват. мн. м."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSF"
+label = "Зват. ед. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPF"
+label = "Зват. мн. ж."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSN"
+label = "Зват. ед. с."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPN"
+label = "Зват. мн. с."
+
+# Verb: Present Active
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1S"
+label = "Наст. акт. изъяв. 1 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2S"
+label = "Наст. акт. изъяв. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3S"
+label = "Наст. акт. изъяв. 3 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1P"
+label = "Наст. акт. изъяв. 1 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2P"
+label = "Наст. акт. изъяв. 2 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3P"
+label = "Наст. акт. изъяв. 3 мн."
+
+# Verb: Imperfect Active
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1S"
+label = "Имперф. акт. изъяв. 1 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2S"
+label = "Имперф. акт. изъяв. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3S"
+label = "Имперф. акт. изъяв. 3 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1P"
+label = "Имперф. акт. изъяв. 1 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2P"
+label = "Имперф. акт. изъяв. 2 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3P"
+label = "Имперф. акт. изъяв. 3 мн."
+
+# Verb: Aorist Active
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1S"
+label = "Аор. акт. изъяв. 1 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2S"
+label = "Аор. акт. изъяв. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3S"
+label = "Аор. акт. изъяв. 3 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1P"
+label = "Аор. акт. изъяв. 1 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2P"
+label = "Аор. акт. изъяв. 2 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3P"
+label = "Аор. акт. изъяв. 3 мн."
+
+# Verb: Future Active
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1S"
+label = "Буд. акт. изъяв. 1 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2S"
+label = "Буд. акт. изъяв. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3S"
+label = "Буд. акт. изъяв. 3 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1P"
+label = "Буд. акт. изъяв. 1 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2P"
+label = "Буд. акт. изъяв. 2 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3P"
+label = "Буд. акт. изъяв. 3 мн."
+
+# Verb: Imperatives
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2S"
+label = "Наст. акт. повел. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2P"
+label = "Наст. акт. повел. 2 мн."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2S"
+label = "Аор. акт. повел. 2 ед."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2P"
+label = "Аор. акт. повел. 2 мн."
+
+# Verb: Infinitives
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAN"
+label = "Наст. акт. инф."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAN"
+label = "Аор. акт. инф."
+
+# Adjective: derived forms
+[[adjective.slots]]
+tag_type = "ag-paradigm"
+tag = "ADV"
+label = "Наречие"

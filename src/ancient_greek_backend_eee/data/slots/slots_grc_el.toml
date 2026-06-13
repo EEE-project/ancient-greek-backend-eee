@@ -1,0 +1,307 @@
+# Ancient Greek backend slot templates — Modern Greek labels
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSM"
+label = "Ονομ. εν. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPM"
+label = "Ονομ. πλ. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSF"
+label = "Ονομ. εν. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPF"
+label = "Ονομ. πλ. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NSN"
+label = "Ονομ. εν. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".NPN"
+label = "Ονομ. πλ. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSM"
+label = "Γεν. εν. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPM"
+label = "Γεν. πλ. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSF"
+label = "Γεν. εν. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPF"
+label = "Γεν. πλ. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GSN"
+label = "Γεν. εν. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".GPN"
+label = "Γεν. πλ. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSM"
+label = "Δοτ. εν. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPM"
+label = "Δοτ. πλ. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSF"
+label = "Δοτ. εν. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPF"
+label = "Δοτ. πλ. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DSN"
+label = "Δοτ. εν. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".DPN"
+label = "Δοτ. πλ. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASM"
+label = "Αιτ. εν. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APM"
+label = "Αιτ. πλ. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASF"
+label = "Αιτ. εν. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APF"
+label = "Αιτ. πλ. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".ASN"
+label = "Αιτ. εν. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".APN"
+label = "Αιτ. πλ. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSM"
+label = "Κλητ. εν. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPM"
+label = "Κλητ. πλ. αρ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSF"
+label = "Κλητ. εν. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPF"
+label = "Κλητ. πλ. θηλ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VSN"
+label = "Κλητ. εν. ουδ."
+
+[[noun.slots]]
+tag_type = "ag"
+tag = ".VPN"
+label = "Κλητ. πλ. ουδ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1S"
+label = "Ενεστ. ενεργ. οριστ. α' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2S"
+label = "Ενεστ. ενεργ. οριστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3S"
+label = "Ενεστ. ενεργ. οριστ. γ' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.1P"
+label = "Ενεστ. ενεργ. οριστ. α' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.2P"
+label = "Ενεστ. ενεργ. οριστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAI.3P"
+label = "Ενεστ. ενεργ. οριστ. γ' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1S"
+label = "Παρατ. ενεργ. οριστ. α' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2S"
+label = "Παρατ. ενεργ. οριστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3S"
+label = "Παρατ. ενεργ. οριστ. γ' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.1P"
+label = "Παρατ. ενεργ. οριστ. α' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.2P"
+label = "Παρατ. ενεργ. οριστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "IAI.3P"
+label = "Παρατ. ενεργ. οριστ. γ' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1S"
+label = "Αόρ. ενεργ. οριστ. α' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2S"
+label = "Αόρ. ενεργ. οριστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3S"
+label = "Αόρ. ενεργ. οριστ. γ' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.1P"
+label = "Αόρ. ενεργ. οριστ. α' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.2P"
+label = "Αόρ. ενεργ. οριστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAI.3P"
+label = "Αόρ. ενεργ. οριστ. γ' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1S"
+label = "Μέλλ. ενεργ. οριστ. α' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2S"
+label = "Μέλλ. ενεργ. οριστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3S"
+label = "Μέλλ. ενεργ. οριστ. γ' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.1P"
+label = "Μέλλ. ενεργ. οριστ. α' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.2P"
+label = "Μέλλ. ενεργ. οριστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "FAI.3P"
+label = "Μέλλ. ενεργ. οριστ. γ' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2S"
+label = "Ενεστ. ενεργ. προστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAD.2P"
+label = "Ενεστ. ενεργ. προστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2S"
+label = "Αόρ. ενεργ. προστ. β' εν."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAD.2P"
+label = "Αόρ. ενεργ. προστ. β' πλ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "PAN"
+label = "Ενεστ. ενεργ. απαρ."
+
+[[verb.slots]]
+tag_type = "ag"
+tag = "AAN"
+label = "Αόρ. ενεργ. απαρ."
+
+# Adjective: derived forms
+[[adjective.slots]]
+tag_type = "ag-paradigm"
+tag = "ADV"
+label = "Επίρρημα"

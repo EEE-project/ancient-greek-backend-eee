@@ -314,3 +314,43 @@ def test_default_still_works_after_lexicon_param():
     result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act",
                                "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
     assert result
+
+
+# --- get_slot_templates (bundled data) ---
+
+def test_get_slot_templates_verb_en_nonempty(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    assert result is not None
+    assert len(result) > 0
+
+
+def test_get_slot_templates_verb_includes_imperatives(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    assert result is not None
+    tags = {s.tag for s in result}
+    assert "PAD.2S" in tags
+    assert "PAD.2P" in tags
+
+
+def test_get_slot_templates_verb_pad2s_has_ud_features(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    slot = next(s for s in result if s.tag == "PAD.2S")
+    assert slot.tag_type == "ud"
+    assert slot.features == {
+        "Tense": "Pres", "VerbForm": "Fin", "Voice": "Act",
+        "Mood": "Imp", "Person": "2", "Number": "Sing",
+    }
+
+
+def test_get_slot_templates_adj_adv_slot(backend):
+    result = backend.get_slot_templates("grc", "adjective", "en")
+    assert result is not None
+    adv = next((s for s in result if s.tag == "ADV"), None)
+    assert adv is not None
+    assert adv.tag_type == "ag-paradigm"
+
+
+def test_get_slot_templates_noun_en_nonempty(backend):
+    result = backend.get_slot_templates("grc", "noun", "en")
+    assert result is not None
+    assert len(result) > 0
