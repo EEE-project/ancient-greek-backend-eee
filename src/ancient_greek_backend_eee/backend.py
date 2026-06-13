@@ -146,89 +146,31 @@ class AncientGreekBackend:
             return {nfc[:-2] + "ῶς"}
         return set()
 
-    def _load_slots_toml(self, terms_lang: str) -> "str | None":
-        """Return TOML text for slots_grc_{terms_lang}.toml.
-
-        Checks ~/.cache override first, then falls back to bundled package data.
-        Falls back to 'en' when the requested language file is absent.
-        """
-        from pathlib import Path
-        candidates = [f"slots_grc_{terms_lang}.toml"]
-        if terms_lang != "en":
-            candidates.append("slots_grc_en.toml")
-        cache_dir = Path.home() / ".cache" / "eee" / "ancient-greek-backend-eee"
-        for name in candidates:
-            p = cache_dir / name
-            if p.exists():
-                return p.read_text(encoding="utf-8")
-        slots_pkg = _pkg_data.files("ancient_greek_backend_eee.data") / "slots"
-        for name in candidates:
-            try:
-                return (slots_pkg / name).read_text(encoding="utf-8")
-            except Exception:
-                pass
-        return None
-
     def get_slot_templates(
         self, lang: str, pos: str, terms_lang: str = "en"
     ) -> "list | None":
-        """Load slot templates for (pos, terms_lang).
+        """Return slot templates for pos, derived from the bundled TSV tag table.
 
-        Reads from ~/.cache override or bundled package data.
-        Falls back to slots_grc_en.toml when the requested language file is absent.
-        Returns None if no file exists or the pos section is absent.
-        Converts 'ag' tag_type entries to 'ud' using the tag→features rows from
-        get_tags(). Parsed results are cached per (pos, terms_lang).
+        terms_lang is accepted for API compatibility but ignored — labels are
+        the tag strings themselves. Results are cached per pos.
         """
-        import tomlkit
         from eee_project._slot_template import SlotTemplate
 
-        cache_key = (pos, terms_lang)
-        if cache_key in self._slot_cache:
-            return self._slot_cache[cache_key]
+        if pos in self._slot_cache:
+            return self._slot_cache[pos]
 
-        text = self._load_slots_toml(terms_lang)
-        if text is None:
+        tags = self.get_tags(pos)
+        if not tags:
             return None
-
-        doc = tomlkit.loads(text)
-        pos_section = doc.get(pos)
-        if pos_section is None:
-            return None
-        raw_slots = pos_section.get("slots")
-        if not raw_slots:
-            return None
-
-        ud_by_tag: "dict[str, dict[str, str]] | None" = None
-        result: list = []
-        for entry in raw_slots:
-            try:
-                tag = str(entry["tag"])
-                tag_type = str(entry["tag_type"])
-                if "features" in entry:
-                    features = dict(entry["features"])
-                elif tag_type == "ag":
-                    if ud_by_tag is None:
-                        ud_by_tag = {
-                            r["tag"]: {k: v for k, v in r.items() if k != "tag"}
-                            for r in self.get_tags(pos)
-                        }
-                    features = ud_by_tag.get(tag)
-                    tag_type = "ud"
-                else:
-                    features = None
-                result.append(SlotTemplate(
-                    label=str(entry["label"]),
-                    tag_type=tag_type,
-                    tag=tag,
-                    features=features,
-                ))
-            except KeyError as exc:
-                raise ValueError(f"Slot entry missing required field {exc}") from exc
-        if result:
-            self._slot_cache[cache_key] = result
-            return result
-        return None
+        result = [
+            SlotTemplate(label=r["tag"], tag_type="ud", tag=r["tag"],
+                         features={k: v for k, v in r.items() if k != "tag"})
+            for r in tags
+        ]
+        if pos == "adjective":
+            result.append(SlotTemplate(label="ADV", tag_type="ag-paradigm", tag="ADV", features=None))
+        self._slot_cache[pos] = result
+        return result
 
     def get_tags(self, pos: str) -> list[dict[str, str]]:
         """Return tag→features rows for pos as a list of dicts.

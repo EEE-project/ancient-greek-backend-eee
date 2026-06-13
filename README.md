@@ -76,7 +76,7 @@ uv run pytest
 
 ## Status
 
-v0.2.2 — `inflect()`, `paradigm()`, and `list_lemmas()` for verbs, nouns, and adjectives.
+v0.2.4 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb coverage depends on the selected lexicon(s); nouns and adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
