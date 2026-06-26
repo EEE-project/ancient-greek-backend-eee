@@ -49,18 +49,18 @@ class AncientGreekBackend:
         self._tag_cache: dict[str, list] = {}
 
     def _get_gi(self, pos: str):
-        from greek_inflexion_eee import load_lexicons, load_noun_default, load_adj_default
+        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
         if pos == "verb":
             if self._gi_verb is None:
                 self._gi_verb = load_lexicons(list(self._lexicons))
             return self._gi_verb
         if pos == "noun":
             if self._gi_noun is None:
-                self._gi_noun = load_noun_default()
+                self._gi_noun = load_noun_lexicons(list(self._lexicons))
             return self._gi_noun
         if pos == "adjective":
             if self._gi_adj is None:
-                self._gi_adj = load_adj_default()
+                self._gi_adj = load_adj_lexicons(list(self._lexicons))
             return self._gi_adj
         raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
 

@@ -43,8 +43,10 @@ forms = backend.inflect("ἀκούω", {
 
 ### Lexicon flavors
 
-The `lexicons` parameter selects which verb vocabulary the backend can inflect.
-Nouns and adjectives always use the bundled Pratt paradigm lexicon.
+The `lexicons` parameter selects the vocabulary for **verbs and nouns**.
+Adjectives always use the bundled Pratt paradigm lexicon (no additional adj lexicons yet).
+
+**Verbs:**
 
 | Name | Verbs | Source | Period / dialect |
 |------|------:|--------|-----------------|
@@ -54,6 +56,13 @@ Nouns and adjectives always use the bundled Pratt paradigm lexicon.
 | `"homer"` | 2335 | Homeric corpus | Epic/Ionic, ~800 BCE |
 | `"lxx"` | 1905 | Septuagint | Biblical κοινή, ~250–100 BCE |
 | `"morphgnt"` | 1848 | New Testament | κοινή, ~1st c. CE |
+
+**Nouns** — Pratt base is always included; `"homer"` extends it:
+
+| Name | Nouns | Source |
+|------|------:|--------|
+| `"pratt"` | 26 | Pratt textbook paradigm nouns |
+| `"homer"` | 15 | Homeric Odyssey/Iliad vocabulary |
 
 Multiple names are merged additively. Absolute file paths load custom YAML lexicons.
 
@@ -76,7 +85,7 @@ uv run pytest
 
 ## Status
 
-v0.2.4 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
-Verb coverage depends on the selected lexicon(s); nouns and adjectives use the Pratt paradigm lexicon.
+v0.3.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.

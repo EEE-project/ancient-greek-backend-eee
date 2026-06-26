@@ -354,3 +354,51 @@ def test_get_slot_templates_noun_en_nonempty(backend):
     result = backend.get_slot_templates("grc", "noun", "en")
     assert result is not None
     assert len(result) > 0
+
+
+# --- homer noun lexicon (bug fix: issue #7) ---
+
+@pytest.fixture(scope="module")
+def homer_backend():
+    return AncientGreekBackend(lexicons=["homer", "lxx", "morphgnt"])
+
+
+@pytest.mark.parametrize("lemma", [
+    "θάνατος", "μόρος", "ἄνεμος", "ἑταῖρος",
+    "νῆσος", "ἤπειρος", "μάχη",
+    "μῆλον", "φύλλον", "αἶσα",
+    "ἄλγος", "ἄνθος", "κτῆμα", "γείτων", "βοῦς",
+])
+def test_homer_noun_has_forms(homer_backend, lemma):
+    p = homer_backend.paradigm(lemma, "noun")
+    assert p, f"{lemma!r} returned empty paradigm"
+
+
+def test_homer_noun_thanatos_nsm(homer_backend):
+    result = homer_backend.inflect("θάνατος", {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}, "noun")
+    assert "θάνατος" in result
+
+
+def test_homer_noun_mache_nsf(homer_backend):
+    result = homer_backend.inflect("μάχη", {"Case": "Nom", "Number": "Sing", "Gender": "Fem"}, "noun")
+    assert "μάχη" in result
+
+
+def test_homer_noun_melon_nsn(homer_backend):
+    result = homer_backend.inflect("μῆλον", {"Case": "Nom", "Number": "Sing", "Gender": "Neut"}, "noun")
+    assert "μῆλον" in result
+
+
+def test_homer_noun_bous_nsm(homer_backend):
+    result = homer_backend.inflect("βοῦς", {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}, "noun")
+    assert "βοῦς" in result
+
+
+def test_homer_noun_geiton_nsm(homer_backend):
+    result = homer_backend.inflect("γείτων", {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}, "noun")
+    assert "γείτων" in result
+
+
+def test_pratt_nouns_still_work_with_homer_backend(homer_backend):
+    result = homer_backend.inflect("λόγος", {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}, "noun")
+    assert "λόγος" in result
