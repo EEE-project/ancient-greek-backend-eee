@@ -106,8 +106,6 @@ class AncientGreekBackend:
         suffix = (ag_noun_key if pos == "noun" else ag_adj_key)(features)
         if suffix is None:
             # No Gender — union across all genders for this case/number
-            case = features['Case']
-            number = features['Number']
             result: set[str] = set()
             for g in "MFN":
                 s = (ag_noun_key if pos == "noun" else ag_adj_key)(
