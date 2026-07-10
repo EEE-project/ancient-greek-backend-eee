@@ -146,8 +146,8 @@ wheels = [
 
 [[package]]
 name = "greek-inflexion-eee"
-version = "0.1.2"
-source = { git = "https://codeberg.org/EEE-project/greek-inflexion-eee.git#681d2aca68071411cc9079040a49e035c3d758e2" }
+version = "0.2.0"
+source = { git = "https://codeberg.org/EEE-project/greek-inflexion-eee.git#fc9719240c772563946e704627b1f95df288d01e" }
 dependencies = [
     { name = "greek-accentuation" },
     { name = "inflexion" },

@@ -124,7 +124,25 @@ class AncientGreekBackend:
     def _build_nominal_cache(self, lemma: str, pos: str) -> dict[str, set[str]]:
         gi = self._get_gi(pos)
         cache: dict[str, set[str]] = {}
+        genders = self._noun_genders(lemma, gi) if pos == "noun" else None
         for csgsuffix in _CSG_KEYS:
+            if (
+                pos == "noun" and genders
+                and csgsuffix[-1] not in genders
+                and (lemma, csgsuffix) not in gi.form_override
+            ):
+                # Unlike adjectives, a noun has exactly one gender (a few
+                # genuinely dual-gender/homograph nouns aside -- see below),
+                # so skip mechanically over-generating forms for genders the
+                # noun doesn't have (e.g. Ζεύς getting a spurious plural/
+                # feminine from its 2nd-declension stem's endings applying
+                # unconditionally to M/F/N alike). An explicit form_override
+                # is trusted regardless of the gender guess: it's confirmed
+                # data, not a mechanical guess, and some nouns are genuinely
+                # dual-gender (γείτων "neighbor", ἅλς "salt"/"sea") in ways a
+                # single-gender heuristic can't anticipate from the lemma's
+                # own nominative singular alone.
+                continue
             forms = set(gi.generate(lemma, csgsuffix).keys())
             if forms:
                 # store with dot prefix to match ag_noun_key / ag_adj_key output
@@ -134,6 +152,39 @@ class AncientGreekBackend:
             if adv:
                 cache["ADV"] = adv
         return cache
+
+    @staticmethod
+    def _noun_genders(lemma: str, gi) -> set[str]:
+        """Detect which gender(s) a noun's own lemma form supports.
+
+        A gender is "detected" when the mechanically-generated nominative
+        singular for that gender matches the lemma itself (accent-
+        insensitive, since generation and the lemma spelling can differ in
+        exactly where an accent lands). Most nouns resolve to a single
+        gender this way. 2nd-declension -ος nouns are a genuine exception:
+        masculine and feminine share identical endings throughout, so a
+        feminine -ος noun (νῆσος, ὁδός, ...) is indistinguishable from a
+        masculine one by form alone -- both genders come back "detected",
+        and both are kept, which is honest rather than silently guessing.
+        Returns an empty set (caller falls back to all three genders) when
+        nothing matches, so an unanticipated lemma shape degrades to the
+        old behavior instead of losing forms outright.
+        """
+        import unicodedata
+
+        def strip_accents(s: str) -> str:
+            return "".join(
+                c for c in unicodedata.normalize("NFD", s)
+                if not unicodedata.combining(c)
+            )
+
+        target = strip_accents(lemma)
+        genders = set()
+        for g in "MFN":
+            forms = gi.generate(lemma, f"NS{g}")
+            if any(strip_accents(f) == target for f in forms):
+                genders.add(g)
+        return genders
 
     @staticmethod
     def _derive_adverb(lemma: str) -> set[str]:
