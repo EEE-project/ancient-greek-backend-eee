@@ -56,13 +56,26 @@ Adjectives always use the bundled Pratt paradigm lexicon (no additional adj lexi
 | `"homer"` | 2335 | Homeric corpus | Epic/Ionic, ~800 BCE |
 | `"lxx"` | 1905 | Septuagint | Biblical κοινή, ~250–100 BCE |
 | `"morphgnt"` | 1848 | New Testament | κοινή, ~1st c. CE |
+| `"lsj"` | 9 | LSJ, hand-authored | Classical Attic |
+| `"morpheus"` | 46 | Morpheus-confirmed attested forms | Epic/Homeric (mixed) |
 
-**Nouns** — Pratt base is always included; `"homer"` extends it:
+**Nouns** — Pratt base is always included; the others extend it:
 
 | Name | Nouns | Source |
 |------|------:|--------|
 | `"pratt"` | 26 | Pratt textbook paradigm nouns |
 | `"homer"` | 15 | Homeric Odyssey/Iliad vocabulary |
+| `"lsj"` | 18 | LSJ, hand-authored, Classical Attic |
+| `"morpheus"` | 62 | Morpheus-confirmed attested forms, Epic/Homeric (mixed) |
+
+`"lsj"` and `"morpheus"` are hand-authored/Morpheus-confirmed respectively, not
+generated from a bulk corpus — see
+[greek-inflexion-eee](https://codeberg.org/EEE-project/greek-inflexion-eee)'s
+own README for how each is built and its exact scope. `"morpheus"` holds
+*verbatim attested forms* (not `stems:` + generated endings) for lemmas the
+stem-based lexicons can't handle cleanly — athematic `-μι` verbs, contract
+verbs, compounds, deponents, non-2nd-declension nouns, oxytone nouns, and
+irregular/suppletive nouns (Ζεύς).
 
 Multiple names are merged additively. Absolute file paths load custom YAML lexicons.
 
@@ -85,7 +98,16 @@ uv run pytest
 
 ## Status
 
-v0.3.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.3.1 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.3.1** — `paradigm()` now restricts a noun's full paradigm table to its own
+detected gender(s), instead of mechanically generating all three for every
+noun. Previously *every* noun using a bare `stems: {noun: ...}` entry showed
+spurious forms for genders it doesn't have (e.g. `Ζεύς` getting a plural and
+a feminine it grammatically can't have). An explicit `forms:` override is
+always trusted regardless of the detected gender, so genuinely dual-gender
+nouns (`γείτων` "neighbor", `ἅλς` "salt"/"sea") keep all their real forms.
+Adjectives are unaffected (they genuinely decline through all three genders).

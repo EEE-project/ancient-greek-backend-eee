@@ -402,3 +402,78 @@ def test_homer_noun_geiton_nsm(homer_backend):
 def test_pratt_nouns_still_work_with_homer_backend(homer_backend):
     result = homer_backend.inflect("λόγος", {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}, "noun")
     assert "λόγος" in result
+
+
+# --- noun paradigm gender restriction (bug fix) ---
+# .paradigm() previously enumerated all 3 genders unconditionally for every
+# noun, so a single-gender noun's full paradigm table included mechanically-
+# generated forms for genders it doesn't have (confirmed to affect every
+# noun using the bare "noun:" stem key, e.g. Ζεύς showing a spurious plural
+# and feminine). These tests exercise .paradigm() specifically -- the other
+# noun tests above all go through .inflect() with an explicit Gender, a path
+# that was already correct since the caller supplies the gender directly.
+
+def test_noun_paradigm_excludes_wrong_gender(homer_backend):
+    # μῆλον is 2nd-declension neuter (-ον); a masculine or feminine cell is
+    # not real Greek for this word.
+    result = homer_backend.paradigm("μῆλον", "noun")
+    genders = {k[-1] for k in result}
+    assert genders == {"N"}, f"expected neuter-only, got {genders}: {result}"
+
+
+def test_noun_paradigm_ambiguous_os_noun_keeps_both_genders(backend):
+    # 2nd-declension -ος nouns are a genuine exception: masculine and
+    # feminine share identical endings throughout (a real feminine -ος noun
+    # like νῆσος is indistinguishable from a masculine one by form alone),
+    # so the gender-detection heuristic can't tell them apart for θεός
+    # either and correctly keeps both rather than guessing. Neuter must
+    # still be excluded, since -ος and -ον endings genuinely differ.
+    result = backend.paradigm("θεός", "noun")
+    genders = {k[-1] for k in result}
+    assert genders == {"M", "F"}, f"expected M+F (ambiguous by form), got {genders}: {result}"
+
+
+def test_noun_paradigm_form_override_always_trusted(backend):
+    # An explicit forms: override must survive regardless of what gender the
+    # detection heuristic guesses for the rest of the noun's paradigm -- it's
+    # confirmed data, not a mechanical guess. This is what lets genuinely
+    # dual-gender nouns (γείτων "neighbor", ἅλς "salt"/"sea") keep all their
+    # real forms even though a single-gender heuristic can't anticipate them
+    # from the lemma's own nominative singular alone. θεός is detected as
+    # M+F (see above); this injects a neuter override it would never
+    # self-detect, to prove the override wins regardless.
+    gi = backend._get_gi("noun")
+    gi.form_override[("θεός", "NSN")] = "ARBITRARY-OVERRIDE-TEST"
+    backend._paradigm_cache.pop(("θεός", "noun"), None)
+    try:
+        result = backend.paradigm("θεός", "noun")
+        assert result.get(".NSN") == {"ARBITRARY-OVERRIDE-TEST"}
+    finally:
+        del gi.form_override[("θεός", "NSN")]
+        backend._paradigm_cache.pop(("θεός", "noun"), None)
+
+
+def test_noun_paradigm_unmatched_lemma_falls_back_to_all_genders(backend):
+    # If the nominative-singular self-check matches no gender at all (an
+    # unanticipated lemma shape -- here, a lemma with no stem registered at
+    # all, only two forced overrides in different genders), the restriction
+    # doesn't engage -- degrades to the pre-fix behavior of showing
+    # everything instead of silently losing forms outright.
+    gi = backend._get_gi("noun")
+    gi.form_override[("ξενολεξις", "GSM")] = "ξενολεξεως"
+    gi.form_override[("ξενολεξις", "NSN")] = "ξενολεξις-neut"
+    try:
+        result = backend.paradigm("ξενολεξις", "noun")
+        assert result.get(".GSM") == {"ξενολεξεως"}
+        assert result.get(".NSN") == {"ξενολεξις-neut"}
+    finally:
+        del gi.form_override[("ξενολεξις", "GSM")]
+        del gi.form_override[("ξενολεξις", "NSN")]
+
+
+def test_adjective_paradigm_still_has_all_genders(backend):
+    # The gender restriction is noun-only -- adjectives genuinely decline
+    # through all 3 genders and must be unaffected.
+    result = backend.paradigm("ἀγαθός", "adjective")
+    genders = {k.split(".")[-1][-1] for k in result if "." in k}
+    assert genders == {"M", "F", "N"}, f"expected all 3 genders, got {genders}"
