@@ -433,42 +433,37 @@ def test_noun_paradigm_ambiguous_os_noun_keeps_both_genders(backend):
     assert genders == {"M", "F"}, f"expected M+F (ambiguous by form), got {genders}: {result}"
 
 
-def test_noun_paradigm_form_override_always_trusted(backend):
+def test_noun_paradigm_form_override_always_trusted():
     # An explicit forms: override must survive regardless of what gender the
     # detection heuristic guesses for the rest of the noun's paradigm -- it's
     # confirmed data, not a mechanical guess. This is what lets genuinely
     # dual-gender nouns (γείτων "neighbor", ἅλς "salt"/"sea") keep all their
     # real forms even though a single-gender heuristic can't anticipate them
     # from the lemma's own nominative singular alone. θεός is detected as
-    # M+F (see above); this injects a neuter override it would never
-    # self-detect, to prove the override wins regardless.
+    # M+F (see the ambiguous-noun test above); this injects a neuter
+    # override it would never self-detect, to prove the override wins
+    # regardless. A fresh backend instance avoids mutating the shared
+    # module-scoped `backend` fixture other tests in this file depend on.
+    backend = AncientGreekBackend()
     gi = backend._get_gi("noun")
     gi.form_override[("θεός", "NSN")] = "ARBITRARY-OVERRIDE-TEST"
-    backend._paradigm_cache.pop(("θεός", "noun"), None)
-    try:
-        result = backend.paradigm("θεός", "noun")
-        assert result.get(".NSN") == {"ARBITRARY-OVERRIDE-TEST"}
-    finally:
-        del gi.form_override[("θεός", "NSN")]
-        backend._paradigm_cache.pop(("θεός", "noun"), None)
+    result = backend.paradigm("θεός", "noun")
+    assert result.get(".NSN") == {"ARBITRARY-OVERRIDE-TEST"}
 
 
-def test_noun_paradigm_unmatched_lemma_falls_back_to_all_genders(backend):
+def test_noun_paradigm_unmatched_lemma_falls_back_to_all_genders():
     # If the nominative-singular self-check matches no gender at all (an
     # unanticipated lemma shape -- here, a lemma with no stem registered at
     # all, only two forced overrides in different genders), the restriction
     # doesn't engage -- degrades to the pre-fix behavior of showing
     # everything instead of silently losing forms outright.
+    backend = AncientGreekBackend()
     gi = backend._get_gi("noun")
     gi.form_override[("ξενολεξις", "GSM")] = "ξενολεξεως"
     gi.form_override[("ξενολεξις", "NSN")] = "ξενολεξις-neut"
-    try:
-        result = backend.paradigm("ξενολεξις", "noun")
-        assert result.get(".GSM") == {"ξενολεξεως"}
-        assert result.get(".NSN") == {"ξενολεξις-neut"}
-    finally:
-        del gi.form_override[("ξενολεξις", "GSM")]
-        del gi.form_override[("ξενολεξις", "NSN")]
+    result = backend.paradigm("ξενολεξις", "noun")
+    assert result.get(".GSM") == {"ξενολεξεως"}
+    assert result.get(".NSN") == {"ξενολεξις-neut"}
 
 
 def test_adjective_paradigm_still_has_all_genders(backend):

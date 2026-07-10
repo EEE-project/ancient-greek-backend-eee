@@ -124,7 +124,8 @@ class AncientGreekBackend:
     def _build_nominal_cache(self, lemma: str, pos: str) -> dict[str, set[str]]:
         gi = self._get_gi(pos)
         cache: dict[str, set[str]] = {}
-        genders = self._noun_genders(lemma, gi) if pos == "noun" else None
+        ns_forms = self._noun_genders(lemma, gi) if pos == "noun" else {}
+        genders = {key[-1] for key in ns_forms}
         for csgsuffix in _CSG_KEYS:
             if (
                 pos == "noun" and genders
@@ -143,7 +144,11 @@ class AncientGreekBackend:
                 # single-gender heuristic can't anticipate from the lemma's
                 # own nominative singular alone.
                 continue
-            forms = set(gi.generate(lemma, csgsuffix).keys())
+            # _noun_genders() already generated the "NS*" cells while
+            # detecting gender -- reuse that instead of asking gi.generate()
+            # (real stemming + accentuation work, not a cheap lookup) for
+            # the exact same (lemma, key) pair a second time.
+            forms = ns_forms.get(csgsuffix) or set(gi.generate(lemma, csgsuffix).keys())
             if forms:
                 # store with dot prefix to match ag_noun_key / ag_adj_key output
                 cache["." + csgsuffix] = forms
@@ -154,7 +159,7 @@ class AncientGreekBackend:
         return cache
 
     @staticmethod
-    def _noun_genders(lemma: str, gi) -> set[str]:
+    def _noun_genders(lemma: str, gi) -> dict[str, set[str]]:
         """Detect which gender(s) a noun's own lemma form supports.
 
         A gender is "detected" when the mechanically-generated nominative
@@ -166,25 +171,24 @@ class AncientGreekBackend:
         feminine -ος noun (νῆσος, ὁδός, ...) is indistinguishable from a
         masculine one by form alone -- both genders come back "detected",
         and both are kept, which is honest rather than silently guessing.
-        Returns an empty set (caller falls back to all three genders) when
+        Returns an empty dict (caller falls back to all three genders) when
         nothing matches, so an unanticipated lemma shape degrades to the
         old behavior instead of losing forms outright.
-        """
-        import unicodedata
 
-        def strip_accents(s: str) -> str:
-            return "".join(
-                c for c in unicodedata.normalize("NFD", s)
-                if not unicodedata.combining(c)
-            )
+        Returns the generated "NS*" forms keyed by CSG suffix (not just the
+        bare gender letters), so the caller can reuse them directly instead
+        of re-generating the same (lemma, key) pair.
+        """
+        from greek_inflexion_eee.accent import strip_accents
 
         target = strip_accents(lemma)
-        genders = set()
+        detected: dict[str, set[str]] = {}
         for g in "MFN":
-            forms = gi.generate(lemma, f"NS{g}")
+            key = f"NS{g}"
+            forms = set(gi.generate(lemma, key).keys())
             if any(strip_accents(f) == target for f in forms):
-                genders.add(g)
-        return genders
+                detected[key] = forms
+        return detected
 
     @staticmethod
     def _derive_adverb(lemma: str) -> set[str]:
