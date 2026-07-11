@@ -389,8 +389,10 @@ def test_list_lemmas_unaffected_by_prior_paradigm_queries():
     b = AncientGreekBackend(lexicons=["byzantine"])
     before = set(b.list_lemmas("verb"))
 
-    for unrelated_lemma in ["εἰμί", "λέγω", "ἀνήρ", "ἄνθρωπος", "χράομαι"]:
-        b.paradigm(unrelated_lemma, "verb" if unrelated_lemma != "ἀνήρ" and unrelated_lemma != "ἄνθρωπος" else "noun")
+    unrelated_lemmas = [("εἰμί", "verb"), ("λέγω", "verb"), ("χράομαι", "verb"),
+                        ("ἀνήρ", "noun"), ("ἄνθρωπος", "noun")]
+    for unrelated_lemma, pos in unrelated_lemmas:
+        b.paradigm(unrelated_lemma, pos)
 
     after = set(b.list_lemmas("verb"))
     assert after == before

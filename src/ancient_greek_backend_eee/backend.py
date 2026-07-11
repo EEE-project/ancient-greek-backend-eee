@@ -53,20 +53,26 @@ class AncientGreekBackend:
         self._paradigm_cache: dict[tuple[str, str], dict[str, set[str]]] = {}
         self._slot_cache: dict[tuple[str, str], list] = {}
         self._tag_cache: dict[str, list] = {}
+        self._lemma_cache: dict[str, list[str]] = {}
+
+    @staticmethod
+    def _loaders():
+        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
+        return {"verb": load_lexicons, "noun": load_noun_lexicons, "adjective": load_adj_lexicons}
 
     def _get_gi(self, pos: str):
-        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
+        loaders = self._loaders()
         if pos == "verb":
             if self._gi_verb is None:
-                self._gi_verb = load_lexicons(list(self._lexicons))
+                self._gi_verb = loaders["verb"](list(self._lexicons))
             return self._gi_verb
         if pos == "noun":
             if self._gi_noun is None:
-                self._gi_noun = load_noun_lexicons(list(self._lexicons))
+                self._gi_noun = loaders["noun"](list(self._lexicons))
             return self._gi_noun
         if pos == "adjective":
             if self._gi_adj is None:
-                self._gi_adj = load_adj_lexicons(list(self._lexicons))
+                self._gi_adj = loaders["adjective"](list(self._lexicons))
             return self._gi_adj
         raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
 
@@ -253,24 +259,25 @@ class AncientGreekBackend:
     def list_lemmas(self, pos: str) -> list[str]:
         if pos not in ("verb", "noun", "adjective"):
             return []
-        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
-        # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_verb etc.
-        # Querying .generate()/.inflect() for a lemma absent from the loaded
-        # lexicon has a documented side effect upstream (inflexion library):
-        # it can add a phantom stem entry to the shared Lexicon object for
-        # that lemma. Once this instance's cached _gi_verb has been used for
-        # any such query (e.g. paradigm() called for lemmas outside this
-        # lexicon, as a tagging/coverage loop over a full vocabulary would),
-        # gi.lexicon.lemma_to_stems no longer reflects only what the bundled
-        # YAML actually contains. list_lemmas must stay correct regardless of
-        # what this instance has already been asked about, so it loads its
-        # own independent copy rather than trusting the shared cache.
-        loader = {"verb": load_lexicons, "noun": load_noun_lexicons,
-                  "adjective": load_adj_lexicons}[pos]
-        gi = loader(list(self._lexicons))
-        lemmas = set(gi.lexicon.lemma_to_stems.keys())
-        lemmas.update(lemma for lemma, _ in gi.form_override.keys())
-        return sorted(lemmas)
+        if pos not in self._lemma_cache:
+            # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_verb etc.
+            # Querying .generate()/.inflect() for a lemma absent from the loaded
+            # lexicon has a documented side effect upstream (inflexion library):
+            # it can add a phantom stem entry to the shared Lexicon object for
+            # that lemma. Once this instance's cached _gi_verb has been used for
+            # any such query (e.g. paradigm() called for lemmas outside this
+            # lexicon, as a tagging/coverage loop over a full vocabulary would),
+            # gi.lexicon.lemma_to_stems no longer reflects only what the bundled
+            # YAML actually contains. list_lemmas must stay correct regardless of
+            # what this instance has already been asked about, so it computes its
+            # own independent copy rather than trusting the shared cache -- and
+            # caches *that* result separately, in a dict .generate()/.paradigm()
+            # never write to, so repeat calls don't pay for a fresh YAML reload.
+            gi = self._loaders()[pos](list(self._lexicons))
+            lemmas = set(gi.lexicon.lemma_to_stems.keys())
+            lemmas.update(lemma for lemma, _ in gi.form_override.keys())
+            self._lemma_cache[pos] = sorted(lemmas)
+        return self._lemma_cache[pos]
 
     def paradigm(self, lemma: str, pos: str) -> dict[str, set[str]]:
         """Return the full paradigm as a dict keyed by TVM/CSG string.
