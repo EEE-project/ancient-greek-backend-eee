@@ -7,7 +7,22 @@ Implements `AncientGreekBackend`, satisfying the `MorphologyBackend` protocol
 defined in the [`eee`](https://codeberg.org/EEE-project/eee-project) package.
 
 Wraps [greek-inflexion-eee](https://codeberg.org/EEE-project/greek-inflexion-eee),
-a fork of James Tauber's `greek-inflexion` library.
+a fork of James Tauber's [greek-inflexion](https://github.com/jtauber/greek-inflexion)
+library. License: **MIT**.
+
+Per the upstream README, the library "can precisely generate (i.e. without
+over-generation) all the forms in the verbal paradigms in Louise Pratt's _The
+Essentials of Greek Grammar_, Helma Dik's _Nifty Greek Handouts_, and Keller
+and Russell's _Learn to Read Greek_. It can also generate the nouns in Pratt."
+Nominal coverage in this package remains limited to those Pratt nouns — Dik's
+and Keller/Russell's nouns are not yet included.
+
+**Period:** Classical Attic Greek (~5th–4th century BCE) is the base pattern —
+accentuation logic broadly follows Classical Attic conventions, and Ionic/Doric
+forms are not generated from the Pratt/Dik/LTRG teaching stems. The corpus
+lexicons (`homer`, `lxx`, `morphgnt`, `lsj`, `morpheus`, `byzantine`) extend
+vocabulary into other periods and dialects while reusing this same stemming and
+accentuation engine — see the period column in the lexicon tables below.
 
 
 ## Installation
@@ -88,6 +103,26 @@ This means `eee.inflect(..., language="grc")` and `eee.inflect(..., backend="anc
 both work without explicit registration.
 
 
+## Implementation
+
+Rule-based generator. A YAML stem database stores principal stems (e.g. `βαλλ`,
+`βαλ`) for each lemma; `stemming.yaml` maps morphological keys to stem-slots
+and endings; a separate accentuation engine applies Attic accent rules. Forms
+are generated on demand — not pre-computed.
+
+Adding a new lemma requires annotating its principal stems; the rule engine
+then generates the full paradigm automatically.
+
+
+## Limitations
+
+- Two-termination adjectives (ἀληθής, ἄδικος) share Masc/Fem forms. The
+  database stores only Fem keys for oblique cases; the backend falls back to
+  Fem automatically when a Masc key is absent.
+- Nominal coverage is limited to Pratt. Nouns from Dik and Keller/Russell are
+  not yet included.
+
+
 ## Development
 
 ```bash
@@ -98,10 +133,14 @@ uv run pytest
 
 ## Status
 
-v0.4.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.4.1 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.4.1** — Documentation: added Source/License, Period, Implementation, and
+Limitations sections (previously only in `eee-project`'s now-removed
+`docs/backends.md`). No functional change.
 
 **v0.4.0** — Dual number exposed for verbs (2nd/3rd person only — Ancient
 Greek has no 1st-person dual): `get_slot_templates()`/`paradigm()` now
