@@ -319,6 +319,27 @@ def test_list_lemmas_includes_forms_only_lexicon():
     assert "ὁράω" in b.list_lemmas("verb")
 
 
+def test_list_lemmas_unaffected_by_prior_paradigm_queries():
+    """Querying .paradigm() for a lemma NOT in the loaded lexicon has a
+    documented side effect in the upstream inflexion library: it can add a
+    phantom stem entry to the shared Lexicon object for that lemma. A
+    coverage/tagging loop over a full vocabulary (as e.g. an interactive-text
+    notebook runs) does exactly this for every word not in a given lexicon.
+    list_lemmas must not surface those phantom entries -- it should report
+    exactly what the bundled YAML contains, regardless of what this instance
+    has already been asked about."""
+    b = AncientGreekBackend(lexicons=["byzantine"])
+    before = set(b.list_lemmas("verb"))
+
+    for unrelated_lemma in ["εἰμί", "λέγω", "ἀνήρ", "ἄνθρωπος", "χράομαι"]:
+        b.paradigm(unrelated_lemma, "verb" if unrelated_lemma != "ἀνήρ" and unrelated_lemma != "ἄνθρωπος" else "noun")
+
+    after = set(b.list_lemmas("verb"))
+    assert after == before
+    assert "εἰμί" not in after
+    assert "λέγω" not in after
+
+
 def test_default_still_works_after_lexicon_param():
     b = AncientGreekBackend()
     result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act",

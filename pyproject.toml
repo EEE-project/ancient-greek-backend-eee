@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ancient-greek-backend-eee"
-version = "0.3.2"
+version = "0.3.3"
 requires-python = ">=3.12"
 dependencies = [
     "greek-inflexion-eee @ git+https://codeberg.org/EEE-project/greek-inflexion-eee.git",

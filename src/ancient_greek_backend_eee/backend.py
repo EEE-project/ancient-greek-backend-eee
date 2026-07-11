@@ -247,7 +247,21 @@ class AncientGreekBackend:
     def list_lemmas(self, pos: str) -> list[str]:
         if pos not in ("verb", "noun", "adjective"):
             return []
-        gi = self._get_gi(pos)
+        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
+        # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_verb etc.
+        # Querying .generate()/.inflect() for a lemma absent from the loaded
+        # lexicon has a documented side effect upstream (inflexion library):
+        # it can add a phantom stem entry to the shared Lexicon object for
+        # that lemma. Once this instance's cached _gi_verb has been used for
+        # any such query (e.g. paradigm() called for lemmas outside this
+        # lexicon, as a tagging/coverage loop over a full vocabulary would),
+        # gi.lexicon.lemma_to_stems no longer reflects only what the bundled
+        # YAML actually contains. list_lemmas must stay correct regardless of
+        # what this instance has already been asked about, so it loads its
+        # own independent copy rather than trusting the shared cache.
+        loader = {"verb": load_lexicons, "noun": load_noun_lexicons,
+                  "adjective": load_adj_lexicons}[pos]
+        gi = loader(list(self._lexicons))
         lemmas = set(gi.lexicon.lemma_to_stems.keys())
         lemmas.update(lemma for lemma, _ in gi.form_override.keys())
         return sorted(lemmas)

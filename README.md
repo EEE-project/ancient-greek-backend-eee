@@ -98,10 +98,19 @@ uv run pytest
 
 ## Status
 
-v0.3.2 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.3.3 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.3.3** — `list_lemmas()` no longer trusts the shared, mutable
+`GreekInflexion` cache: the upstream `inflexion` library's `.generate()` has
+an undocumented side effect where querying an unknown lemma can add a
+phantom stem entry to the shared lexicon object, so a `list_lemmas()` call
+made after any unrelated `.paradigm()`/`.inflect()` query on the same
+instance (e.g. a coverage/tagging loop over a full vocabulary) could return
+lemmas that were never actually in the loaded lexicon. `list_lemmas()` now
+does its own independent, uncached load every call.
 
 **v0.3.2** — `list_lemmas()` now includes lemmas that only exist via a
 `forms:` override (e.g. the `byzantine` and `morpheus` lexicons in
