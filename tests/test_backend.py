@@ -309,6 +309,16 @@ def test_list_lemmas_homer_includes_akouo():
     assert "ἀκούω" in b.list_lemmas("verb")
 
 
+def test_list_lemmas_includes_forms_only_lexicon():
+    """A lexicon with zero stems: entries (e.g. byzantine, morpheus) was
+    invisible to list_lemmas even though .generate()/.paradigm() correctly
+    return data for it -- list_lemmas only enumerated gi.lexicon, never
+    gi.form_override."""
+    b = AncientGreekBackend(lexicons=["byzantine"])
+    assert "γιγνώσκω" in b.list_lemmas("verb")
+    assert "ὁράω" in b.list_lemmas("verb")
+
+
 def test_default_still_works_after_lexicon_param():
     b = AncientGreekBackend()
     result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act",

@@ -98,10 +98,17 @@ uv run pytest
 
 ## Status
 
-v0.3.1 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.3.2 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.3.2** — `list_lemmas()` now includes lemmas that only exist via a
+`forms:` override (e.g. the `byzantine` and `morpheus` lexicons in
+`greek-inflexion-eee`, which have zero `stems:` entries) — previously it only
+enumerated the stem-based lexicon, so a `forms:`-only lemma was invisible to
+any "pick a word" UI even though `.inflect()`/`.paradigm()` correctly
+returned data for it.
 
 **v0.3.1** — `paradigm()` now restricts a noun's full paradigm table to its own
 detected gender(s), instead of mechanically generating all three for every

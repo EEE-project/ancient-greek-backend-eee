@@ -248,7 +248,9 @@ class AncientGreekBackend:
         if pos not in ("verb", "noun", "adjective"):
             return []
         gi = self._get_gi(pos)
-        return sorted(gi.lexicon.lemma_to_stems.keys())
+        lemmas = set(gi.lexicon.lemma_to_stems.keys())
+        lemmas.update(lemma for lemma, _ in gi.form_override.keys())
+        return sorted(lemmas)
 
     def paradigm(self, lemma: str, pos: str) -> dict[str, set[str]]:
         """Return the full paradigm as a dict keyed by TVM/CSG string.
