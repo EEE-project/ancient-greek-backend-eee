@@ -98,10 +98,28 @@ uv run pytest
 
 ## Status
 
-v0.3.3 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.4.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.4.0** — Dual number exposed for verbs (2nd/3rd person only — Ancient
+Greek has no 1st-person dual): `get_slot_templates()`/`paradigm()` now
+include `2D`/`3D` slots wherever the underlying `greek-inflexion-eee`
+stemming engine actually has dual rules (confirmed: Present/Imperfect/
+Future/Perfect active indicative, Present active imperative, plus a few
+subjunctive/optative/3rd-imperative combinations found via the exhaustive
+`paradigm()` sweep) — was previously generated correctly but never queried,
+since `_VERB_PERSONS`/`_VERB_IMP_PN` (Python) and `verb-tags.tsv` (the data
+`get_slot_templates()` reads) both hardcoded singular/plural only. Aorist and
+Middle/Passive dual remain genuinely unsupported (zero rule coverage in the
+stemming engine, not a gap in this fix) and correctly return nothing rather
+than a wrong or invented form. Noun dual is a separate, larger gap: the
+stemming engine has zero declension rules for it at all (only 3 individually
+attested forms exist project-wide, via `greek-inflexion-eee`'s `morpheus`
+lexicon) — not addressed here. Also tightens two tests that were tolerant of
+a since-fixed upstream bug (`greek-inflexion-eee` v0.4.1) where macron-bearing
+stems like λύω leaked a stray combining mark into acute-accented forms.
 
 **v0.3.3** — `list_lemmas()` no longer trusts the shared, mutable
 `GreekInflexion` cache: the upstream `inflexion` library's `.generate()` has

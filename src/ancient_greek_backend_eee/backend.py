@@ -16,8 +16,14 @@ _CSG_KEYS = [
 # Indicative tense/voice/mood combinations for verb paradigm
 _VERB_TENSES  = list("PIAFX")   # Pres, Imp, Aor, Fut, Perf
 _VERB_VOICES  = list("AMP")
-_VERB_PERSONS = ["1S", "2S", "3S", "1P", "2P", "3P"]
-_VERB_IMP_PN  = ["2S", "3S", "2P", "3P"]
+# No "1D": Ancient Greek has no first-person dual. 2D/3D are tried for every
+# tense/voice/mood combination here (same as every other person) even though
+# the stemming engine only actually has dual rules for a subset (Pres/Imp/
+# Fut/Perf Act Ind, Pres Act Imp) -- harmless, since only non-empty results
+# get stored below; matches this same exhaustive-sweep-then-filter shape
+# already used for every other person/tense/voice/mood combination.
+_VERB_PERSONS = ["1S", "2S", "3S", "2D", "3D", "1P", "2P", "3P"]
+_VERB_IMP_PN  = ["2S", "3S", "2D", "3D", "2P", "3P"]
 _VERB_TAGS = {"final-nu-aai.3s"}
 
 

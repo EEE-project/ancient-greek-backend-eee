@@ -14,7 +14,7 @@ def test_verb_pres_act_ind_1s(backend):
     result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
     assert isinstance(result, set)
     assert len(result) == 1
-    assert result.pop().rstrip() in {"λύω", "λῡ́ω", "λῡω"}  # allow macron variant
+    assert result.pop().rstrip() == "λύω"
 
 
 def test_verb_pres_act_ind_2s(backend):
@@ -42,6 +42,36 @@ def test_verb_midpass_union_nonempty(backend):
     result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Mid,Pass", "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
     assert isinstance(result, set)
     assert result
+
+
+# --- dual number (2026-07-11: added for Pres/Imp/Fut/Perf Act Ind + Pres Act
+# Imp -- the only tense/voice/mood combos the stemming engine actually has
+# dual rules for; Aor and Mid/Pass dual have zero rule coverage) ---
+
+def test_verb_pres_act_ind_2d():
+    from ancient_greek_backend_eee import AncientGreekBackend
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
+    assert "λύετον" in result
+
+
+def test_verb_perf_act_ind_3d():
+    from ancient_greek_backend_eee import AncientGreekBackend
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Perf", "Voice": "Act", "Mood": "Ind", "Person": "3", "Number": "Dual"}, "verb")
+    assert "λελύκατον" in result
+
+
+def test_verb_aor_act_ind_2d_has_no_rule_coverage():
+    """Documents a real engine limitation, not a bug: aorist dual isn't
+    implemented at all, for any verb -- confirmed structural (checked
+    across multiple verbs), not a gap in this specific lemma's data. This
+    is why verb-tags.tsv only has dual rows for Pres/Imp/Fut/Perf Act Ind
+    and Pres Act Imp, not Aor or Mid/Pass."""
+    from ancient_greek_backend_eee import AncientGreekBackend
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Aor", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
+    assert result == set()
 
 
 def test_verb_eimi_3s(backend):
@@ -141,6 +171,30 @@ def test_paradigm_verb_returns_dict(backend):
     assert result
 
 
+def test_paradigm_verb_includes_dual(backend):
+    result = backend.paradigm("λύω", "verb")
+    assert result.get("PAI.2D") == {"λύετον"}
+    assert result.get("PAI.3D") == result.get("PAI.2D")  # syncretic with 2D, as expected
+
+
+def test_paradigm_verb_no_1d():
+    """Ancient Greek has no first-person dual -- must never appear, even
+    though _VERB_PERSONS/_VERB_IMP_PN are swept exhaustively per tense/
+    voice/mood combination the same way every other person is."""
+    from ancient_greek_backend_eee import AncientGreekBackend
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.paradigm("λύω", "verb")
+    assert not any(k.endswith(".1D") for k in result)
+
+
+def test_paradigm_verb_dual_absent_where_engine_has_no_rule(backend):
+    """Aorist active dual has zero rule coverage in the stemming engine
+    (confirmed across multiple verbs elsewhere in this file) -- .paradigm()
+    must not silently invent a key for it."""
+    result = backend.paradigm("λύω", "verb")
+    assert "AAI.2D" not in result
+
+
 def test_paradigm_noun_returns_dict(backend):
     result = backend.paradigm("θεός", "noun")
     assert isinstance(result, dict)
@@ -197,7 +251,11 @@ def test_get_tags_adj_row_count(backend):
 
 
 def test_get_tags_verb_row_count(backend):
-    assert len(backend.get_tags("verb")) == 88
+    # 88 base rows + 9 dual (2D/3D for the tense/voice combos the engine
+    # actually supports: PAI/IAI/FAI/XAI indicative + PAD imperative --
+    # aorist and middle/passive dual have zero rule coverage in the
+    # stemming engine, so they're deliberately not included here).
+    assert len(backend.get_tags("verb")) == 97
 
 
 def test_get_tags_unknown_pos_returns_empty(backend):
@@ -370,6 +428,23 @@ def test_get_slot_templates_verb_pad2s_has_ud_features(backend):
     assert slot.features == {
         "Tense": "Pres", "VerbForm": "Fin", "Voice": "Act",
         "Mood": "Imp", "Person": "2", "Number": "Sing",
+    }
+
+
+def test_get_slot_templates_verb_includes_dual(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    tags = {s.tag for s in result}
+    assert {"PAI.2D", "PAI.3D", "IAI.2D", "IAI.3D", "FAI.2D", "FAI.3D",
+            "XAI.2D", "XAI.3D", "PAD.2D"} <= tags
+
+
+def test_get_slot_templates_verb_pai2d_has_ud_features(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    slot = next(s for s in result if s.tag == "PAI.2D")
+    assert slot.tag_type == "ud"
+    assert slot.features == {
+        "Tense": "Pres", "VerbForm": "Fin", "Voice": "Act",
+        "Mood": "Ind", "Person": "2", "Number": "Dual",
     }
 
 

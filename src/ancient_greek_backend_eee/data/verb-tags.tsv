@@ -5,6 +5,8 @@ PAI.3S	Pres	Fin	Act	Ind	3	Sing
 PAI.1P	Pres	Fin	Act	Ind	1	Plur
 PAI.2P	Pres	Fin	Act	Ind	2	Plur
 PAI.3P	Pres	Fin	Act	Ind	3	Plur
+PAI.2D	Pres	Fin	Act	Ind	2	Dual
+PAI.3D	Pres	Fin	Act	Ind	3	Dual
 PAS.1S	Pres	Fin	Act	Sub	1	Sing
 PAS.2S	Pres	Fin	Act	Sub	2	Sing
 PAS.3S	Pres	Fin	Act	Sub	3	Sing
@@ -18,6 +20,7 @@ PAO.1P	Pres	Fin	Act	Opt	1	Plur
 PAO.2P	Pres	Fin	Act	Opt	2	Plur
 PAO.3P	Pres	Fin	Act	Opt	3	Plur
 PAD.2S	Pres	Fin	Act	Imp	2	Sing
+PAD.2D	Pres	Fin	Act	Imp	2	Dual
 PAD.2P	Pres	Fin	Act	Imp	2	Plur
 PAN	Pres	Inf	Act
 IAI.1S	Imp	Fin	Act	Ind	1	Sing
@@ -26,6 +29,8 @@ IAI.3S	Imp	Fin	Act	Ind	3	Sing
 IAI.1P	Imp	Fin	Act	Ind	1	Plur
 IAI.2P	Imp	Fin	Act	Ind	2	Plur
 IAI.3P	Imp	Fin	Act	Ind	3	Plur
+IAI.2D	Imp	Fin	Act	Ind	2	Dual
+IAI.3D	Imp	Fin	Act	Ind	3	Dual
 AAI.1S	Aor	Fin	Act	Ind	1	Sing
 AAI.2S	Aor	Fin	Act	Ind	2	Sing
 AAI.3S	Aor	Fin	Act	Ind	3	Sing
@@ -53,12 +58,16 @@ FAI.3S	Fut	Fin	Act	Ind	3	Sing
 FAI.1P	Fut	Fin	Act	Ind	1	Plur
 FAI.2P	Fut	Fin	Act	Ind	2	Plur
 FAI.3P	Fut	Fin	Act	Ind	3	Plur
+FAI.2D	Fut	Fin	Act	Ind	2	Dual
+FAI.3D	Fut	Fin	Act	Ind	3	Dual
 XAI.1S	Perf	Fin	Act	Ind	1	Sing
 XAI.2S	Perf	Fin	Act	Ind	2	Sing
 XAI.3S	Perf	Fin	Act	Ind	3	Sing
 XAI.1P	Perf	Fin	Act	Ind	1	Plur
 XAI.2P	Perf	Fin	Act	Ind	2	Plur
 XAI.3P	Perf	Fin	Act	Ind	3	Plur
+XAI.2D	Perf	Fin	Act	Ind	2	Dual
+XAI.3D	Perf	Fin	Act	Ind	3	Dual
 PMI.1S	Pres	Fin	Mid	Ind	1	Sing
 PMI.2S	Pres	Fin	Mid	Ind	2	Sing
 PMI.3S	Pres	Fin	Mid	Ind	3	Sing
