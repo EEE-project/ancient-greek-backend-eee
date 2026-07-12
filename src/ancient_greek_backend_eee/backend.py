@@ -419,8 +419,10 @@ class AncientGreekBackend:
                 forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                 if forms:
                     result[key] = forms
-                # participle (nom/gen sg all genders)
-                for csg in ["NSM", "NSF", "NSN", "GSM", "GSF", "GSN"]:
+                # participle (all 30 case/number/gender cells, no dual --
+                # same enumeration nouns/adjectives use; participle dual
+                # isn't viable yet, no lexicon data to reach it)
+                for csg in _CSG_KEYS:
                     key = f"{t}{v}P.{csg}"
                     forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                     if forms:

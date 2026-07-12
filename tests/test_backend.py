@@ -187,6 +187,16 @@ def test_paradigm_verb_dual_absent_where_engine_has_no_rule(backend):
     assert "AAI.2D" not in result
 
 
+def test_paradigm_verb_participle_covers_plural():
+    """οἴχομαι's attested present middle participle masc. plural nominative
+    (οἰχόμενοι) was structurally unreachable — the participle sweep's csg
+    list was hardcoded to 6 singular cells only, unlike the full 30-cell
+    _CSG_KEYS enumeration nouns/adjectives use."""
+    b = AncientGreekBackend(lexicons=["homer"])
+    result = b.paradigm("οἴχομαι", "verb")
+    assert "οἰχόμενοι" in result.get("PMP.NPM", set())
+
+
 def test_paradigm_noun_returns_dict(backend):
     result = backend.paradigm("θεός", "noun")
     assert isinstance(result, dict)
