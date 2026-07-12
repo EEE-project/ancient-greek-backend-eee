@@ -389,15 +389,18 @@ def test_list_lemmas_unaffected_by_prior_paradigm_queries():
     b = AncientGreekBackend(lexicons=["byzantine"])
     before = set(b.list_lemmas("verb"))
 
-    unrelated_lemmas = [("εἰμί", "verb"), ("λέγω", "verb"), ("χράομαι", "verb"),
+    # λύω/πράττω/χράομαι and both nouns are confirmed absent from the
+    # byzantine lexicon (unlike the previous εἰμί/λέγω picks, which the
+    # lexicon grew to legitimately include -- see byzantine_verbs_lexicon.yaml).
+    unrelated_lemmas = [("λύω", "verb"), ("πράττω", "verb"), ("χράομαι", "verb"),
                         ("ἀνήρ", "noun"), ("ἄνθρωπος", "noun")]
     for unrelated_lemma, pos in unrelated_lemmas:
         b.paradigm(unrelated_lemma, pos)
 
     after = set(b.list_lemmas("verb"))
     assert after == before
-    assert "εἰμί" not in after
-    assert "λέγω" not in after
+    assert "λύω" not in after
+    assert "πράττω" not in after
 
 
 def test_default_still_works_after_lexicon_param():
