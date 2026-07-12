@@ -197,6 +197,19 @@ def test_paradigm_verb_participle_covers_plural():
     assert "οἰχόμενοι" in result.get("PMP.NPM", set())
 
 
+def test_paradigm_noun_surfaces_attested_duals():
+    """_CSG_KEYS only swept Sing/Plur, so the 3 individually-attested noun
+    duals in the morpheus lexicon (form_override entries, no stemming rule
+    generates them) were structurally unreachable through .paradigm() even
+    though the underlying data was correct."""
+    b = AncientGreekBackend(lexicons=["morpheus"])
+    assert "κήρυκε" in b.paradigm("κῆρυξ", "noun").get(".NDM", set())
+    assert "ἀνέρε" in b.paradigm("ἀνήρ", "noun").get(".NDM", set())
+    podoin = b.paradigm("πούς", "noun")
+    assert "ποδοῖιν" in podoin.get(".DDM", set())
+    assert "ποδοῖιν" in podoin.get(".GDM", set())
+
+
 def test_paradigm_noun_returns_dict(backend):
     result = backend.paradigm("θεός", "noun")
     assert isinstance(result, dict)

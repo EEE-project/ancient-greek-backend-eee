@@ -18,11 +18,16 @@ _POS_TSV = {
 # happens to sort first for a shared tag. See tools/generate_pronoun_tags.py
 # for the full reasoning and regeneration instructions.
 
-# All 30 case/number/gender combinations for noun and adjective paradigms
+# All 45 case/number/gender combinations for noun, adjective, and verb-
+# participle paradigms. Includes dual ("D") to surface the handful of
+# individually-attested noun duals in the morpheus lexicon (e.g. κῆρυξ's
+# NDM: κήρυκε) -- regular nouns/adjectives/participles have no dual
+# stemming rules, so gi.generate() safely returns empty for the rest of
+# the dual cells rather than raising (verified before adding this).
 _CSG_KEYS = [
     c + n + g
     for c in "NGDAV"
-    for n in "SP"
+    for n in "SPD"
     for g in "MFN"
 ]
 
