@@ -1,9 +1,22 @@
 import csv
 import importlib.resources as _pkg_data
 
-from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key
+from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key, ag_pron_key
 
-_POS_TSV = {"noun": "noun-tags.tsv", "adjective": "adj-tags.tsv", "verb": "verb-tags.tsv"}
+_POS_TSV = {
+    "noun": "noun-tags.tsv", "adjective": "adj-tags.tsv", "verb": "verb-tags.tsv",
+    "pronoun": "pronoun-tags.tsv",
+}
+
+# pronoun-tags.tsv (unlike the other three) legitimately has multiple rows
+# sharing the same tag string: PronType is a per-lemma-family fact (e.g.
+# .NSM is used by οὗτος=Dem, ὅς=Rel, τίς=Int, τις=Ind, all with different
+# PronType), but get_slot_templates()/get_tags() are POS-level, not
+# lemma-level, APIs. Known consequence for callers: a caller that picks
+# the FIRST slot matching a tag (rather than filtering by the lemma's
+# own real PronType first) will always resolve to whichever PronType
+# happens to sort first for a shared tag. See tools/generate_pronoun_tags.py
+# for the full reasoning and regeneration instructions.
 
 # All 30 case/number/gender combinations for noun and adjective paradigms
 _CSG_KEYS = [
@@ -12,6 +25,30 @@ _CSG_KEYS = [
     for n in "SP"
     for g in "MFN"
 ]
+
+# Adjective-like pronoun families (demonstrative/relative/interrogative/
+# indefinite/reciprocal) DO have dual forms (section-03's pronoun_lexicon.yaml
+# ships them for οὗτος/ἐκεῖνος/ὅδε/ὅς), unlike regular nouns/adjectives --
+# so this sweep needs "D" in the number position, unlike _CSG_KEYS above.
+_PRON_ADJ_CSG_KEYS = [
+    c + n + g
+    for c in "NGDAV"
+    for n in "SPD"
+    for g in "MFN"
+]
+
+# Personal pronouns (ἐγώ, σύ): Case x Number x Person, no Gender axis.
+# No Vocative -- Ancient Greek personal pronouns have no distinct
+# vocative case (confirmed against Smyth's Grammar during section-03).
+_PRON_PERSONAL_CASES = "NGDA"
+_PRON_PERSONAL_NUMBERS = "SPD"
+_PRON_PERSONAL_PERSONS = "12"
+
+# The two pronoun lemmas with no Gender axis (Case+Number+Person shape).
+# A second place, besides section-03's lexicon file, that has to agree on
+# which lemmas are personal -- flagged, not eliminated, per this section's
+# own "known tech debt" note on hardcoded POS dispatch below.
+_PERSONAL_PRONOUN_LEMMAS = {"ἐγώ", "σύ"}
 
 # Indicative tense/voice/mood combinations for verb paradigm
 _VERB_TENSES  = list("PIAFX")   # Pres, Imp, Aor, Fut, Perf
@@ -31,14 +68,24 @@ class AncientGreekBackend:
     """MorphologyBackend implementation for Ancient Greek (ISO 639-2: grc).
 
     Wraps greek_inflexion_eee (Pratt lexicon) to generate inflected surface
-    forms from Universal Dependencies FEATS dicts.
+    forms from Universal Dependencies FEATS dicts. Supports four parts of
+    speech: "verb", "noun", "adjective", "pronoun".
 
     Lazy loading: greek_inflexion_eee is not imported at module load time.
-    Paradigm results for nouns and adjectives are cached per lemma after
-    the first call.
+    Paradigm results for nouns, adjectives, and pronouns are cached per
+    lemma after the first call.
 
     Exception propagation: library exceptions for unknown lemmas propagate
     unwrapped from generate().
+
+    Known tech debt: each part of speech is hardcoded at five separate
+    dispatch points (_get_gi, inflect, paradigm, get_slot_templates/
+    get_tags via _POS_TSV, list_lemmas) rather than routed through a
+    dict of pos-name -> handler-object, which would let a new pos be
+    added via configuration instead of editing five methods. This was a
+    deliberate choice when "pronoun" was added as the fourth pos (a
+    dispatcher-object refactor is real scope creep beyond "add one pos")
+    -- worth reconsidering if/when a fifth pos is ever added.
     """
 
     language = "grc"
@@ -50,6 +97,7 @@ class AncientGreekBackend:
         self._gi_verb = None
         self._gi_noun = None
         self._gi_adj  = None
+        self._gi_pron = None
         self._paradigm_cache: dict[tuple[str, str], dict[str, set[str]]] = {}
         self._slot_cache: dict[tuple[str, str], list] = {}
         self._tag_cache: dict[str, list] = {}
@@ -57,8 +105,11 @@ class AncientGreekBackend:
 
     @staticmethod
     def _loaders():
-        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons
-        return {"verb": load_lexicons, "noun": load_noun_lexicons, "adjective": load_adj_lexicons}
+        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons, load_pron_lexicons
+        return {
+            "verb": load_lexicons, "noun": load_noun_lexicons,
+            "adjective": load_adj_lexicons, "pronoun": load_pron_lexicons,
+        }
 
     def _get_gi(self, pos: str):
         loaders = self._loaders()
@@ -74,7 +125,11 @@ class AncientGreekBackend:
             if self._gi_adj is None:
                 self._gi_adj = loaders["adjective"](list(self._lexicons))
             return self._gi_adj
-        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
+        if pos == "pronoun":
+            if self._gi_pron is None:
+                self._gi_pron = loaders["pronoun"](list(self._lexicons))
+            return self._gi_pron
+        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
 
     def inflect(self, lemma: str, features: dict[str, str], pos: str, **_kw) -> set[str]:
         """Map UD FEATS + pos to a set of inflected surface forms.
@@ -82,20 +137,22 @@ class AncientGreekBackend:
         Args:
             lemma: polytonic Greek lemma (must match Pratt lexicon key exactly)
             features: UD FEATS dict (e.g., {"Tense": "Pres", "Voice": "Act", ...})
-            pos: one of "verb", "noun", "adjective"
+            pos: one of "verb", "noun", "adjective", "pronoun"
 
         Returns:
             set[str] of surface forms; empty set if the paradigm path has no forms.
 
         Raises:
-            ValueError: if pos is not "verb", "noun", or "adjective"
+            ValueError: if pos is not "verb", "noun", "adjective", or "pronoun"
             KeyError: if a required feature is absent (propagated from _ag_features)
         """
         if pos == "verb":
             return self._inflect_verb(lemma, features)
         if pos in ("noun", "adjective"):
             return self._inflect_nominal(lemma, features, pos)
-        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
+        if pos == "pronoun":
+            return self._inflect_pronoun(lemma, features)
+        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
 
     def _inflect_verb(self, lemma: str, features: dict[str, str]) -> set[str]:
         key = ag_verb_key(features)
@@ -168,6 +225,63 @@ class AncientGreekBackend:
             adv = self._derive_adverb(lemma)
             if adv:
                 cache["ADV"] = adv
+        return cache
+
+    def _inflect_pronoun(self, lemma: str, features: dict[str, str]) -> set[str]:
+        cache = self._get_pronoun_cache(lemma)
+        suffix = ag_pron_key(features)
+        result = cache.get(suffix, set())
+        # Common-gender pronouns (τίς/τις): Masc and Fem share one form,
+        # stored only under the Masc key in the lexicon (mirrors the
+        # two-termination adjective Masc<-Fem fallback in
+        # _inflect_nominal). A no-op for lemmas with a real, distinct
+        # Fem cell (ὅς, οὗτος, ἀλλήλων, ...): cache.get(suffix, ...)
+        # above already succeeds for those, so this branch never fires.
+        # suffix.endswith("F") is safe against the personal-pronoun
+        # family, whose keys always end in a Person digit ('1'/'2'),
+        # never 'F'.
+        if not result and suffix and suffix.endswith("F"):
+            result = cache.get(suffix[:-1] + "M", set())
+        return result
+
+    def _get_pronoun_cache(self, lemma: str) -> dict[str, set[str]]:
+        # Deliberately NOT routed through _inflect_nominal/_build_nominal_cache:
+        # (1) _inflect_nominal's suffix = (ag_noun_key if pos == "noun" else
+        #     ag_adj_key)(...) is a binary ternary that would silently call
+        #     ag_adj_key instead of ag_pron_key for pos == "pronoun"; (2)
+        #     _build_nominal_cache sweeps _CSG_KEYS (Sing/Plur only, no
+        #     Dual) -- the adjective-like pronoun families genuinely have
+        #     dual forms (section-03's lexicon ships them), so reusing it
+        #     unchanged would silently make every pronoun dual cell
+        #     unreachable through paradigm()/inflect() even though the
+        #     underlying lexicon data is correct and complete.
+        cache_key = (lemma, "pronoun")
+        if cache_key not in self._paradigm_cache:
+            if lemma in _PERSONAL_PRONOUN_LEMMAS:
+                self._paradigm_cache[cache_key] = self._build_pronoun_cache_personal(lemma)
+            else:
+                self._paradigm_cache[cache_key] = self._build_pronoun_cache_adjective_shaped(lemma)
+        return self._paradigm_cache[cache_key]
+
+    def _build_pronoun_cache_adjective_shaped(self, lemma: str) -> dict[str, set[str]]:
+        gi = self._get_gi("pronoun")
+        cache: dict[str, set[str]] = {}
+        for csgsuffix in _PRON_ADJ_CSG_KEYS:
+            forms = set(gi.generate(lemma, csgsuffix).keys())
+            if forms:
+                cache["." + csgsuffix] = forms
+        return cache
+
+    def _build_pronoun_cache_personal(self, lemma: str) -> dict[str, set[str]]:
+        gi = self._get_gi("pronoun")
+        cache: dict[str, set[str]] = {}
+        for c in _PRON_PERSONAL_CASES:
+            for n in _PRON_PERSONAL_NUMBERS:
+                for p in _PRON_PERSONAL_PERSONS:
+                    key = f"{c}{n}{p}"
+                    forms = set(gi.generate(lemma, key).keys())
+                    if forms:
+                        cache["." + key] = forms
         return cache
 
     @staticmethod
@@ -257,7 +371,7 @@ class AncientGreekBackend:
         return result
 
     def list_lemmas(self, pos: str) -> list[str]:
-        if pos not in ("verb", "noun", "adjective"):
+        if pos not in ("verb", "noun", "adjective", "pronoun"):
             return []
         if pos not in self._lemma_cache:
             # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_verb etc.
@@ -283,7 +397,7 @@ class AncientGreekBackend:
         """Return the full paradigm as a dict keyed by TVM/CSG string.
 
         Raises:
-            ValueError: if pos is not "verb", "noun", or "adjective"
+            ValueError: if pos is not "verb", "noun", "adjective", or "pronoun"
         """
         if pos in ("noun", "adjective"):
             cache_key = (lemma, pos)
@@ -292,7 +406,9 @@ class AncientGreekBackend:
             return dict(self._paradigm_cache[cache_key])
         if pos == "verb":
             return self._build_verb_paradigm(lemma)
-        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', or 'adjective'.")
+        if pos == "pronoun":
+            return dict(self._get_pronoun_cache(lemma))
+        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
 
     def _build_verb_paradigm(self, lemma: str) -> dict[str, set[str]]:
         gi = self._get_gi("verb")

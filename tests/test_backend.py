@@ -583,3 +583,199 @@ def test_adjective_paradigm_still_has_all_genders(backend):
     result = backend.paradigm("ἀγαθός", "adjective")
     genders = {k.split(".")[-1][-1] for k in result if "." in k}
     assert genders == {"M", "F", "N"}, f"expected all 3 genders, got {genders}"
+
+
+# --- pronouns: get_tags / get_slot_templates ---
+# pronoun-tags.tsv legitimately has multiple rows sharing the same tag
+# string (e.g. .NSM appears once per pronoun family that attests it --
+# οὗτος=Dem, ὅς=Rel, τίς=Int, τις=Ind all have an NSM cell) since
+# PronType is a per-lemma-family fact layered onto this otherwise
+# POS-level (not lemma-level) tag table -- see tools/generate_pronoun_tags.py
+# for the full reasoning, including a known consequence for downstream
+# tag-only-matching consumers. Tests below account for this rather than
+# assuming tag uniqueness within the pos.
+
+def test_get_tags_pronoun_nonempty(backend):
+    assert backend.get_tags("pronoun")
+
+
+def test_get_tags_pronoun_gender_rows_lack_person(backend):
+    """Mirrors test_get_tags_verb_infinitive_rows_lack_mood_person_number's
+    blank-cell-is-omitted convention: rows for the adjective-like pronoun
+    family must not carry a Person key."""
+    tags = backend.get_tags("pronoun")
+    gender_rows = [t for t in tags if "Gender" in t]
+    assert gender_rows
+    for t in gender_rows:
+        assert "Person" not in t
+
+
+def test_get_tags_pronoun_person_rows_lack_gender(backend):
+    tags = backend.get_tags("pronoun")
+    person_rows = [t for t in tags if "Person" in t]
+    assert person_rows
+    for t in person_rows:
+        assert "Gender" not in t
+
+
+def test_get_tags_pronoun_all_rows_have_prontype(backend):
+    """PronType applies to every pronoun cell regardless of family — the
+    interview decision (Q1) that PronType should always be present."""
+    tags = backend.get_tags("pronoun")
+    for t in tags:
+        assert "PronType" in t
+
+
+def test_get_tags_pronoun_all_five_gender_prontypes_present(backend):
+    """Every non-personal PronType value is actually reachable -- a
+    naive one-row-per-tag dedup would silently make some of these
+    unrepresentable (the bug tools/generate_pronoun_tags.py's own
+    docstring documents catching: deduping by tag alone made Rcp/Int/Ind
+    vanish entirely, since their cells always collide with a
+    higher-priority family's identical tag string)."""
+    tags = backend.get_tags("pronoun")
+    prontypes = {t["PronType"] for t in tags}
+    assert {"Dem", "Rel", "Int", "Ind", "Rcp", "Prs"} <= prontypes
+
+
+def test_get_slot_templates_pronoun_en_nonempty(backend):
+    result = backend.get_slot_templates("grc", "pronoun", "en")
+    assert result is not None
+    assert len(result) > 0
+
+
+def test_get_slot_templates_pronoun_all_ud_tag_type(backend):
+    result = backend.get_slot_templates("grc", "pronoun", "en")
+    assert all(s.tag_type == "ud" for s in result)
+    assert all(s.features for s in result)
+
+
+# --- pronouns: dispatch ---
+
+def test_get_gi_pronoun_lazy_cached():
+    b = AncientGreekBackend()
+    assert b._gi_pron is None
+    gi1 = b._get_gi("pronoun")
+    assert b._gi_pron is not None
+    gi2 = b._get_gi("pronoun")
+    assert gi1 is gi2
+
+
+def test_inflect_pronoun_personal_shape_returns_nonempty(backend):
+    """ἐγώ, 1st singular nominative -- personal-pronoun (no Gender) shape."""
+    result = backend.inflect(
+        "ἐγώ", {"Case": "Nom", "Number": "Sing", "Person": "1", "PronType": "Prs"}, "pronoun",
+    )
+    assert isinstance(result, set)
+    assert result
+
+
+def test_inflect_pronoun_adjective_shape_returns_nonempty(backend):
+    """οὗτος, masc nom sing -- Gender-present, adjective-like shape."""
+    result = backend.inflect(
+        "οὗτος", {"Case": "Nom", "Number": "Sing", "Gender": "Masc", "PronType": "Dem"}, "pronoun",
+    )
+    assert isinstance(result, set)
+    assert result
+
+
+def test_inflect_pronoun_personal_dual_returns_correct_form(backend):
+    """ἐγώ's confirmed genuine dual (νώ) — exact-string check, not just
+    non-empty, since dual is the one paradigm axis unique to personal
+    pronouns among nominal-shaped categories."""
+    result = backend.inflect(
+        "ἐγώ", {"Case": "Nom", "Number": "Dual", "Person": "1", "PronType": "Prs"}, "pronoun",
+    )
+    assert "νώ" in result
+
+
+def test_inflect_pronoun_common_gender_fem_falls_back_to_shared_form(backend):
+    """τίς/τις are common-gender (Masc and Fem share one form, stored
+    only under the Masc key) -- asking for Fem explicitly must still
+    return the real shared form, not silently empty. Caught by code
+    review: no test previously exercised this, and the naive
+    cache.get(suffix, set()) lookup alone returns set() for Fem since
+    no Fem-keyed cell was ever shipped for these two lemmas."""
+    result = backend.inflect(
+        "τίς", {"Case": "Nom", "Number": "Sing", "Gender": "Fem", "PronType": "Int"}, "pronoun",
+    )
+    assert "τίς" in result
+
+
+def test_inflect_pronoun_fem_fallback_is_noop_for_distinct_gender_lemmas(backend):
+    """The Masc<-Fem fallback must not paper over lemmas that genuinely
+    lack a cell for other reasons (e.g. ἀλλήλων's defective paradigm) --
+    it should stay empty, not incorrectly borrow the Masc cell, when
+    Masc is ALSO absent for the same underlying reason."""
+    result = backend.inflect(
+        "ἀλλήλων", {"Case": "Nom", "Number": "Sing", "Gender": "Fem", "PronType": "Rcp"}, "pronoun",
+    )
+    assert result == set()
+
+
+def test_paradigm_pronoun_personal_returns_populated_dict(backend):
+    result = backend.paradigm("ἐγώ", "pronoun")
+    assert isinstance(result, dict)
+    assert result
+
+
+def test_paradigm_pronoun_adjective_shape_returns_populated_dict(backend):
+    result = backend.paradigm("οὗτος", "pronoun")
+    assert isinstance(result, dict)
+    assert result
+
+
+def test_paradigm_pronoun_personal_includes_dual():
+    """ἐγώ has a confirmed genuine dual (νώ/νῷν) -- the one other paradigm
+    besides verbs to have any dual cell at all in this backend."""
+    b = AncientGreekBackend()
+    result = b.paradigm("ἐγώ", "pronoun")
+    assert any(k[2] == "D" for k in result), f"no dual cell found in {result!r}"
+
+
+def test_paradigm_pronoun_adjective_shape_includes_dual(backend):
+    """οὗτος also has confirmed dual forms (τούτω/τούτοιν) shipped in
+    section-03's lexicon -- this only reaches the paradigm if the
+    adjective-shaped pronoun sweep includes Dual, unlike nouns/
+    adjectives' own _CSG_KEYS (Sing/Plur only, no Dual)."""
+    result = backend.paradigm("οὗτος", "pronoun")
+    assert result.get(".NDM") == {"τούτω"}
+    assert result.get(".GDM") == {"τούτοιν"}
+
+
+def test_paradigm_pronoun_reciprocal_excludes_nominative_and_singular(backend):
+    """Mirrors section-03's lexicon-level guard, at the paradigm-building
+    level -- confirms the defective ἀλλήλων paradigm (oblique cases only,
+    dual+plural only) survives the full build path, not just the raw
+    forms: block. ἀλλήλων is Gender-present (reciprocal is grouped into
+    the adjective-like family), so its cache keys use the same
+    '.' + Case + Number + Gender shape as ag_adj_key."""
+    result = backend.paradigm("ἀλλήλων", "pronoun")
+    assert result
+    for key in result:
+        csg = key.lstrip(".")
+        assert csg[0] != "N", f"unexpected nominative cell {key!r}"
+        assert csg[1] != "S", f"unexpected singular cell {key!r}"
+
+
+def test_list_lemmas_pronoun_returns_all_lemmas(backend):
+    lemmas = backend.list_lemmas("pronoun")
+    assert len(lemmas) >= 10
+    assert "ἐγώ" in lemmas
+    assert "ἀλλήλων" in lemmas
+
+
+def test_paradigm_unknown_pos_message_mentions_pronoun(backend):
+    with pytest.raises(ValueError, match="pronoun"):
+        backend.paradigm("λύω", "unknown_pos")
+
+
+def test_inflect_unknown_pos_message_mentions_pronoun(backend):
+    with pytest.raises(ValueError, match="pronoun"):
+        backend.inflect("λύω", {}, "unknown_pos")
+
+
+def test_get_gi_unknown_pos_message_mentions_pronoun():
+    b = AncientGreekBackend()
+    with pytest.raises(ValueError, match="pronoun"):
+        b._get_gi("unknown_pos")

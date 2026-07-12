@@ -133,10 +133,24 @@ uv run pytest
 
 ## Status
 
-v0.4.1 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, and adjectives.
+v0.5.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, adjectives, and pronouns.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.5.0** — Added `"pronoun"` as a fourth part of speech, covering 10 lemmas
+across four families: personal (ἐγώ, σύ — Case+Number+Person shape, no
+Gender), demonstrative/relative/interrogative/indefinite/reciprocal (οὗτος,
+ἐκεῖνος, ὅδε, ὅς, τίς, τις, ὅστις, ἀλλήλων — Case+Number+Gender shape, same
+as adjectives). `SlotTemplate.features` includes a UD FEATS `PronType`
+(`Prs`/`Dem`/`Rel`/`Int`/`Ind`/`Rcp`) on every pronoun cell. The
+adjective-like families include genuine dual forms (unlike regular nouns/
+adjectives, whose Sing/Plur-only paradigm sweep doesn't reach dual even
+where the underlying lexicon has data). **Caveat:** αὐτός (the standard
+3rd-person pronoun / intensive "self"/"same") is intentionally *not* part of
+`pos="pronoun"` — it declines exactly like a regular 2-1-2 adjective and is
+reachable only via `pos="adjective"`; `list_lemmas("pronoun")` will never
+surface it.
 
 **v0.4.1** — Documentation: added Source/License, Period, Implementation, and
 Limitations sections (previously only in `eee-project`'s now-removed

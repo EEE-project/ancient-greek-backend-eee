@@ -8,6 +8,9 @@ TVM key format used by greek_inflexion_eee:
 
 Voice=Mid,Pass returns None from ag_verb_key — caller unions M and P results.
 Absent Gender returns None from ag_noun_key / ag_adj_key — caller unions all genders.
+ag_pron_key never returns None: absent Gender routes to its Person-keyed
+branch instead of triggering a union, since Gender's absence is the
+permanent, correct state for personal pronouns, not a caller omission.
 """
 
 # Tense
@@ -122,3 +125,34 @@ def ag_adj_key(features: dict[str, str]) -> str | None:
     if gender is None:
         return None
     return '.' + _CASE[case] + _NUM[number] + _GEND[gender]
+
+
+def ag_pron_key(features: dict[str, str]) -> str:
+    """Compose a tag-key string from UD pronoun features.
+
+    Branches on Gender presence, not PronType:
+      - Gender present (demonstrative/relative/interrogative/indefinite/
+        reciprocal): identical Case+Number+Gender composition to
+        ag_adj_key, dot-prefixed.
+      - Gender absent (personal pronouns, ἐγώ/σύ): a new Case+Number+
+        Person composition, also dot-prefixed for the same backend
+        cache-key convention.
+    Gender-presence is already the established branch signal ag_noun_key/
+    ag_adj_key use elsewhere in this module; PronType only needs to be
+    present in the caller's features dict for downstream rendering to
+    consume, not consulted here.
+
+    Unlike ag_noun_key/ag_adj_key, this never returns None: Gender's
+    absence is the *normal*, permanent state for personal pronouns, not
+    a caller omission requesting a cross-gender union.
+
+    Raises KeyError if Case or Number is absent, or if the relevant axis
+    (Gender for the first branch, Person for the second) is missing.
+    """
+    case = features['Case']
+    number = features['Number']
+    gender = features.get('Gender')
+    if gender is not None:
+        return '.' + _CASE[case] + _NUM[number] + _GEND[gender]
+    person = features['Person']
+    return '.' + _CASE[case] + _NUM[number] + person
