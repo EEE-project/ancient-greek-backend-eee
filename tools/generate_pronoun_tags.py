@@ -60,6 +60,9 @@ _CASE_REV = {'N': 'Nom', 'A': 'Acc', 'G': 'Gen', 'D': 'Dat', 'V': 'Voc'}
 _NUM_REV = {'S': 'Sing', 'P': 'Plur', 'D': 'Dual'}
 _GEND_REV = {'M': 'Masc', 'F': 'Fem', 'N': 'Neut'}
 
+# Kept in sync by hand with backend.py's _PERSONAL_PRONOUN_LEMMAS -- this
+# script deliberately doesn't import ancient_greek_backend_eee (it generates
+# the data file that package ships), so there's no clean shared-import fix.
 _PERSONAL_LEMMAS = {"ἐγώ", "σύ"}
 _PRONTYPE = {
     "ἐγώ": "Prs", "σύ": "Prs",

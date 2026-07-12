@@ -48,29 +48,23 @@ def test_verb_midpass_union_nonempty(backend):
 # Imp -- the only tense/voice/mood combos the stemming engine actually has
 # dual rules for; Aor and Mid/Pass dual have zero rule coverage) ---
 
-def test_verb_pres_act_ind_2d():
-    from ancient_greek_backend_eee import AncientGreekBackend
-    b = AncientGreekBackend(lexicons=["homer"])
-    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
+def test_verb_pres_act_ind_2d(backend):
+    result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
     assert "λύετον" in result
 
 
-def test_verb_perf_act_ind_3d():
-    from ancient_greek_backend_eee import AncientGreekBackend
-    b = AncientGreekBackend(lexicons=["homer"])
-    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Perf", "Voice": "Act", "Mood": "Ind", "Person": "3", "Number": "Dual"}, "verb")
+def test_verb_perf_act_ind_3d(backend):
+    result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Perf", "Voice": "Act", "Mood": "Ind", "Person": "3", "Number": "Dual"}, "verb")
     assert "λελύκατον" in result
 
 
-def test_verb_aor_act_ind_2d_has_no_rule_coverage():
+def test_verb_aor_act_ind_2d_has_no_rule_coverage(backend):
     """Documents a real engine limitation, not a bug: aorist dual isn't
     implemented at all, for any verb -- confirmed structural (checked
     across multiple verbs), not a gap in this specific lemma's data. This
     is why verb-tags.tsv only has dual rows for Pres/Imp/Fut/Perf Act Ind
     and Pres Act Imp, not Aor or Mid/Pass."""
-    from ancient_greek_backend_eee import AncientGreekBackend
-    b = AncientGreekBackend(lexicons=["homer"])
-    result = b.inflect("λύω", {"VerbForm": "Fin", "Tense": "Aor", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
+    result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Aor", "Voice": "Act", "Mood": "Ind", "Person": "2", "Number": "Dual"}, "verb")
     assert result == set()
 
 
@@ -177,13 +171,11 @@ def test_paradigm_verb_includes_dual(backend):
     assert result.get("PAI.3D") == result.get("PAI.2D")  # syncretic with 2D, as expected
 
 
-def test_paradigm_verb_no_1d():
+def test_paradigm_verb_no_1d(backend):
     """Ancient Greek has no first-person dual -- must never appear, even
     though _VERB_PERSONS/_VERB_IMP_PN are swept exhaustively per tense/
     voice/mood combination the same way every other person is."""
-    from ancient_greek_backend_eee import AncientGreekBackend
-    b = AncientGreekBackend(lexicons=["homer"])
-    result = b.paradigm("λύω", "verb")
+    result = backend.paradigm("λύω", "verb")
     assert not any(k.endswith(".1D") for k in result)
 
 
@@ -654,9 +646,9 @@ def test_get_slot_templates_pronoun_all_ud_tag_type(backend):
 
 def test_get_gi_pronoun_lazy_cached():
     b = AncientGreekBackend()
-    assert b._gi_pron is None
+    assert "pronoun" not in b._gi_cache
     gi1 = b._get_gi("pronoun")
-    assert b._gi_pron is not None
+    assert "pronoun" in b._gi_cache
     gi2 = b._get_gi("pronoun")
     assert gi1 is gi2
 

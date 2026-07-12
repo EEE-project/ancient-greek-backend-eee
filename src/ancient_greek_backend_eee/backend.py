@@ -45,9 +45,12 @@ _PRON_PERSONAL_NUMBERS = "SPD"
 _PRON_PERSONAL_PERSONS = "12"
 
 # The two pronoun lemmas with no Gender axis (Case+Number+Person shape).
-# A second place, besides section-03's lexicon file, that has to agree on
-# which lemmas are personal -- flagged, not eliminated, per this section's
-# own "known tech debt" note on hardcoded POS dispatch below.
+# Two other places have to agree on which lemmas are personal: section-03's
+# lexicon file, and tools/generate_pronoun_tags.py's own _PERSONAL_LEMMAS
+# (that script deliberately avoids importing this package -- it generates
+# the data file this package ships -- so there's no clean shared-import fix;
+# flagged here, not eliminated, so a future edit to either set gets a
+# pointer to the other).
 _PERSONAL_PRONOUN_LEMMAS = {"ἐγώ", "σύ"}
 
 # Indicative tense/voice/mood combinations for verb paradigm
@@ -78,14 +81,12 @@ class AncientGreekBackend:
     Exception propagation: library exceptions for unknown lemmas propagate
     unwrapped from generate().
 
-    Known tech debt: each part of speech is hardcoded at five separate
-    dispatch points (_get_gi, inflect, paradigm, get_slot_templates/
-    get_tags via _POS_TSV, list_lemmas) rather than routed through a
-    dict of pos-name -> handler-object, which would let a new pos be
-    added via configuration instead of editing five methods. This was a
-    deliberate choice when "pronoun" was added as the fourth pos (a
-    dispatcher-object refactor is real scope creep beyond "add one pos")
-    -- worth reconsidering if/when a fifth pos is ever added.
+    Known tech debt: verb/noun/adjective/pronoun are still hardcoded as
+    separate branches in inflect/paradigm (their per-pos logic genuinely
+    differs) rather than routed through a dict of pos-name -> handler.
+    _get_gi/list_lemmas/get_slot_templates/get_tags are pos-generic
+    (dispatch via _loaders()/_POS_TSV), so a new pos only needs new
+    branches in inflect/paradigm, not five separate edits.
     """
 
     language = "grc"
@@ -94,10 +95,7 @@ class AncientGreekBackend:
         self, lexicons: "tuple[str, ...] | list[str]" = ("pratt",)
     ) -> None:
         self._lexicons = tuple(lexicons)
-        self._gi_verb = None
-        self._gi_noun = None
-        self._gi_adj  = None
-        self._gi_pron = None
+        self._gi_cache: dict[str, object] = {}
         self._paradigm_cache: dict[tuple[str, str], dict[str, set[str]]] = {}
         self._slot_cache: dict[tuple[str, str], list] = {}
         self._tag_cache: dict[str, list] = {}
@@ -113,23 +111,11 @@ class AncientGreekBackend:
 
     def _get_gi(self, pos: str):
         loaders = self._loaders()
-        if pos == "verb":
-            if self._gi_verb is None:
-                self._gi_verb = loaders["verb"](list(self._lexicons))
-            return self._gi_verb
-        if pos == "noun":
-            if self._gi_noun is None:
-                self._gi_noun = loaders["noun"](list(self._lexicons))
-            return self._gi_noun
-        if pos == "adjective":
-            if self._gi_adj is None:
-                self._gi_adj = loaders["adjective"](list(self._lexicons))
-            return self._gi_adj
-        if pos == "pronoun":
-            if self._gi_pron is None:
-                self._gi_pron = loaders["pronoun"](list(self._lexicons))
-            return self._gi_pron
-        raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
+        if pos not in loaders:
+            raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
+        if pos not in self._gi_cache:
+            self._gi_cache[pos] = loaders[pos](list(self._lexicons))
+        return self._gi_cache[pos]
 
     def inflect(self, lemma: str, features: dict[str, str], pos: str, **_kw) -> set[str]:
         """Map UD FEATS + pos to a set of inflected surface forms.
@@ -374,12 +360,12 @@ class AncientGreekBackend:
         if pos not in ("verb", "noun", "adjective", "pronoun"):
             return []
         if pos not in self._lemma_cache:
-            # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_verb etc.
+            # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_cache[pos].
             # Querying .generate()/.inflect() for a lemma absent from the loaded
             # lexicon has a documented side effect upstream (inflexion library):
             # it can add a phantom stem entry to the shared Lexicon object for
-            # that lemma. Once this instance's cached _gi_verb has been used for
-            # any such query (e.g. paradigm() called for lemmas outside this
+            # that lemma. Once this instance's cached _gi_cache[pos] has been used
+            # for any such query (e.g. paradigm() called for lemmas outside this
             # lexicon, as a tagging/coverage loop over a full vocabulary would),
             # gi.lexicon.lemma_to_stems no longer reflects only what the bundled
             # YAML actually contains. list_lemmas must stay correct regardless of

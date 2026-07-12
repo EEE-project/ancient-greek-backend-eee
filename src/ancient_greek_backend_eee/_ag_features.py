@@ -132,8 +132,10 @@ def ag_pron_key(features: dict[str, str]) -> str:
 
     Branches on Gender presence, not PronType:
       - Gender present (demonstrative/relative/interrogative/indefinite/
-        reciprocal): identical Case+Number+Gender composition to
-        ag_adj_key, dot-prefixed.
+        reciprocal): delegates to ag_adj_key, since the composition is
+        identical Case+Number+Gender, dot-prefixed (extra keys like
+        Person/PronType in features are harmlessly ignored by ag_adj_key,
+        same as any other unknown feature key).
       - Gender absent (personal pronouns, ἐγώ/σύ): a new Case+Number+
         Person composition, also dot-prefixed for the same backend
         cache-key convention.
@@ -149,10 +151,9 @@ def ag_pron_key(features: dict[str, str]) -> str:
     Raises KeyError if Case or Number is absent, or if the relevant axis
     (Gender for the first branch, Person for the second) is missing.
     """
+    if features.get('Gender') is not None:
+        return ag_adj_key(features)
     case = features['Case']
     number = features['Number']
-    gender = features.get('Gender')
-    if gender is not None:
-        return '.' + _CASE[case] + _NUM[number] + _GEND[gender]
     person = features['Person']
     return '.' + _CASE[case] + _NUM[number] + person
