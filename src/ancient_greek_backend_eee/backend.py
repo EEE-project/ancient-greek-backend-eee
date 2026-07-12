@@ -208,7 +208,7 @@ class AncientGreekBackend:
                 # store with dot prefix to match ag_noun_key / ag_adj_key output
                 cache["." + csgsuffix] = forms
         if pos == "adjective":
-            adv = self._derive_adverb(lemma)
+            adv = self._derive_adverb(lemma, cache)
             if adv:
                 cache["ADV"] = adv
         return cache
@@ -303,12 +303,35 @@ class AncientGreekBackend:
         return detected
 
     @staticmethod
-    def _derive_adverb(lemma: str) -> set[str]:
-        """Derive adverb from adjective lemma. Handles regular -ος/-ός → -ῶς."""
+    def _derive_adverb(lemma: str, cache: dict[str, set[str]]) -> set[str]:
+        """Derive adverb from adjective lemma. Handles regular -ος/-ός → -ῶς.
+
+        Prefers the genitive plural masculine cell already computed in
+        *cache* (Smyth: the adverb takes the accent of the gen. plural) over
+        re-deriving accent placement by hand -- reuses the stemming engine's
+        own correct accentuation instead of guessing. Handles adjectives
+        whose own lemma accent isn't on the final syllable correctly this
+        way (δίκαιος -> δικαίως via gen. pl. δικαίων, not the old
+        δίκαιος -> δίκαιῶς double-accent bug: stripping just "-ος" and
+        appending "-ῶς" left the lemma's own antepenult accent in place).
+        Falls back to the naive lemma-ending swap only when the lemma is
+        itself final-accented (where the two approaches always coincide)
+        and no gen. plural data exists; for a non-final-accented lemma with
+        no gen. plural data, returns empty rather than risk the same
+        double-accent bug.
+        """
         import unicodedata
+        from greek_inflexion_eee.accent import strip_accents
+
+        gpm_forms = cache.get(".GPM")
+        if gpm_forms:
+            return {f[:-1] + "ς" for f in gpm_forms if f.endswith("ν")}
+
         nfc = unicodedata.normalize("NFC", lemma)
         if nfc.endswith("ός") or nfc.endswith("ος"):
-            return {nfc[:-2] + "ῶς"}
+            stem = nfc[:-2]
+            if strip_accents(stem) == stem:  # no accent left: lemma was final-accented
+                return {stem + "ῶς"}
         return set()
 
     def get_slot_templates(

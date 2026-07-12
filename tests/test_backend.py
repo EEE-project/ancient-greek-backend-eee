@@ -219,6 +219,18 @@ def test_paradigm_adj_adverb_agathos(backend):
     assert result.get("ADV") == {"ἀγαθῶς"}
 
 
+def test_paradigm_adj_adverb_not_final_accented(backend):
+    """δίκαιος is accented on the first syllable, not the ending -- the old
+    formation rule stripped only "-ος" and appended "-ῶς" unconditionally,
+    producing the invalid double-accented "δίκαιῶς" (original accent still
+    on the stem, plus the ending's own circumflex). Correct form is
+    δικαίως, derived from the genitive plural δικαίων (Smyth: the adverb
+    takes the gen. plural's accent) rather than guessed from the bare
+    lemma."""
+    result = backend.paradigm("δίκαιος", "adjective")
+    assert result.get("ADV") == {"δικαίως"}
+
+
 def test_paradigm_adj_adverb_no_match(backend):
     # ἀληθής ends in -ής, not -ος → no adverb derived
     result = backend.paradigm("ἀληθής", "adjective")
