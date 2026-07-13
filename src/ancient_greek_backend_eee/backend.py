@@ -31,17 +31,6 @@ _CSG_KEYS = [
     for g in "MFN"
 ]
 
-# Adjective-like pronoun families (demonstrative/relative/interrogative/
-# indefinite/reciprocal) DO have dual forms (section-03's pronoun_lexicon.yaml
-# ships them for οὗτος/ἐκεῖνος/ὅδε/ὅς), unlike regular nouns/adjectives --
-# so this sweep needs "D" in the number position, unlike _CSG_KEYS above.
-_PRON_ADJ_CSG_KEYS = [
-    c + n + g
-    for c in "NGDAV"
-    for n in "SPD"
-    for g in "MFN"
-]
-
 # Personal pronouns (ἐγώ, σύ): Case x Number x Person, no Gender axis.
 # No Vocative -- Ancient Greek personal pronouns have no distinct
 # vocative case (confirmed against Smyth's Grammar during section-03).
@@ -237,15 +226,11 @@ class AncientGreekBackend:
 
     def _get_pronoun_cache(self, lemma: str) -> dict[str, set[str]]:
         # Deliberately NOT routed through _inflect_nominal/_build_nominal_cache:
-        # (1) _inflect_nominal's suffix = (ag_noun_key if pos == "noun" else
-        #     ag_adj_key)(...) is a binary ternary that would silently call
-        #     ag_adj_key instead of ag_pron_key for pos == "pronoun"; (2)
-        #     _build_nominal_cache sweeps _CSG_KEYS (Sing/Plur only, no
-        #     Dual) -- the adjective-like pronoun families genuinely have
-        #     dual forms (section-03's lexicon ships them), so reusing it
-        #     unchanged would silently make every pronoun dual cell
-        #     unreachable through paradigm()/inflect() even though the
-        #     underlying lexicon data is correct and complete.
+        # _inflect_nominal's suffix = (ag_noun_key if pos == "noun" else
+        # ag_adj_key)(...) is a binary ternary that would silently call
+        # ag_adj_key instead of ag_pron_key for pos == "pronoun", producing
+        # the wrong cache-key shape. (_CSG_KEYS coverage is not the issue --
+        # it now includes Dual, same as the sweep below.)
         cache_key = (lemma, "pronoun")
         if cache_key not in self._paradigm_cache:
             if lemma in _PERSONAL_PRONOUN_LEMMAS:
@@ -257,7 +242,7 @@ class AncientGreekBackend:
     def _build_pronoun_cache_adjective_shaped(self, lemma: str) -> dict[str, set[str]]:
         gi = self._get_gi("pronoun")
         cache: dict[str, set[str]] = {}
-        for csgsuffix in _PRON_ADJ_CSG_KEYS:
+        for csgsuffix in _CSG_KEYS:
             forms = set(gi.generate(lemma, csgsuffix).keys())
             if forms:
                 cache["." + csgsuffix] = forms
@@ -447,9 +432,10 @@ class AncientGreekBackend:
                 forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
                 if forms:
                     result[key] = forms
-                # participle (all 30 case/number/gender cells, no dual --
-                # same enumeration nouns/adjectives use; participle dual
-                # isn't viable yet, no lexicon data to reach it)
+                # participle (all 45 case/number/gender/dual cells -- same
+                # _CSG_KEYS enumeration nouns/adjectives use; no participle
+                # in the lexicon has dual data, so those cells never
+                # actually surface anything)
                 for csg in _CSG_KEYS:
                     key = f"{t}{v}P.{csg}"
                     forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())

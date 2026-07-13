@@ -144,9 +144,10 @@ Gender), demonstrative/relative/interrogative/indefinite/reciprocal (οὗτος
 ἐκεῖνος, ὅδε, ὅς, τίς, τις, ὅστις, ἀλλήλων — Case+Number+Gender shape, same
 as adjectives). `SlotTemplate.features` includes a UD FEATS `PronType`
 (`Prs`/`Dem`/`Rel`/`Int`/`Ind`/`Rcp`) on every pronoun cell. The
-adjective-like families include genuine dual forms (unlike regular nouns/
-adjectives, whose Sing/Plur-only paradigm sweep doesn't reach dual even
-where the underlying lexicon has data). **Caveat:** αὐτός (the standard
+adjective-like families include genuine dual forms shipped in their lexicon
+data; regular nouns and adjectives reach the same dual cells structurally
+but mostly lack data there — a handful of individually-attested noun duals
+(e.g. κῆρυξ's `.NDM` κήρυκε) are the exception. **Caveat:** αὐτός (the standard
 3rd-person pronoun / intensive "self"/"same") is intentionally *not* part of
 `pos="pronoun"` — it declines exactly like a regular 2-1-2 adjective and is
 reachable only via `pos="adjective"`; `list_lemmas("pronoun")` will never

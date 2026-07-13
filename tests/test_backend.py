@@ -190,7 +190,7 @@ def test_paradigm_verb_dual_absent_where_engine_has_no_rule(backend):
 def test_paradigm_verb_participle_covers_plural():
     """οἴχομαι's attested present middle participle masc. plural nominative
     (οἰχόμενοι) was structurally unreachable — the participle sweep's csg
-    list was hardcoded to 6 singular cells only, unlike the full 30-cell
+    list was hardcoded to 6 singular cells only, unlike the full 45-cell
     _CSG_KEYS enumeration nouns/adjectives use."""
     b = AncientGreekBackend(lexicons=["homer"])
     result = b.paradigm("οἴχομαι", "verb")
@@ -762,9 +762,9 @@ def test_paradigm_pronoun_personal_includes_dual():
 
 def test_paradigm_pronoun_adjective_shape_includes_dual(backend):
     """οὗτος also has confirmed dual forms (τούτω/τούτοιν) shipped in
-    section-03's lexicon -- this only reaches the paradigm if the
-    adjective-shaped pronoun sweep includes Dual, unlike nouns/
-    adjectives' own _CSG_KEYS (Sing/Plur only, no Dual)."""
+    section-03's lexicon -- regression check that the adjective-shaped
+    pronoun sweep, which now shares _CSG_KEYS with nouns/adjectives/
+    participles, still reaches Dual cells."""
     result = backend.paradigm("οὗτος", "pronoun")
     assert result.get(".NDM") == {"τούτω"}
     assert result.get(".GDM") == {"τούτοιν"}
