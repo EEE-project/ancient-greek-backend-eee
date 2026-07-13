@@ -239,11 +239,24 @@ class AncientGreekBackend:
                 self._paradigm_cache[cache_key] = self._build_pronoun_cache_adjective_shaped(lemma)
         return self._paradigm_cache[cache_key]
 
+    @staticmethod
+    def _sweep_form(gi, lemma: str, key: str, *, tags: dict[str, str] | None = None) -> set[str]:
+        """Generate one paradigm cell's forms. Empty set when nothing generates.
+
+        Shared by every paradigm-cache sweep loop (pronoun, verb) -- each
+        loop still does its own "if forms: store under my own key shape"
+        afterward, since that part genuinely differs (dot-prefixed vs. bare
+        keys, different target dicts).
+        """
+        if tags is not None:
+            return set(gi.generate(lemma, key, tags=tags).keys())
+        return set(gi.generate(lemma, key).keys())
+
     def _build_pronoun_cache_adjective_shaped(self, lemma: str) -> dict[str, set[str]]:
         gi = self._get_gi("pronoun")
         cache: dict[str, set[str]] = {}
         for csgsuffix in _CSG_KEYS:
-            forms = set(gi.generate(lemma, csgsuffix).keys())
+            forms = self._sweep_form(gi, lemma, csgsuffix)
             if forms:
                 cache["." + csgsuffix] = forms
         return cache
@@ -255,7 +268,7 @@ class AncientGreekBackend:
             for n in _PRON_PERSONAL_NUMBERS:
                 for p in _PRON_PERSONAL_PERSONS:
                     key = f"{c}{n}{p}"
-                    forms = set(gi.generate(lemma, key).keys())
+                    forms = self._sweep_form(gi, lemma, key)
                     if forms:
                         cache["." + key] = forms
         return cache
@@ -417,18 +430,18 @@ class AncientGreekBackend:
                 for m in "ISO":
                     for pn in _VERB_PERSONS:
                         key = f"{t}{v}{m}.{pn}"
-                        forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
+                        forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                         if forms:
                             result[key] = forms
                 # imperative
                 for pn in _VERB_IMP_PN:
                     key = f"{t}{v}D.{pn}"
-                    forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
+                    forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                     if forms:
                         result[key] = forms
                 # infinitive
                 key = f"{t}{v}N"
-                forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
+                forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                 if forms:
                     result[key] = forms
                 # participle (all 45 case/number/gender/dual cells -- same
@@ -437,7 +450,7 @@ class AncientGreekBackend:
                 # actually surface anything)
                 for csg in _CSG_KEYS:
                     key = f"{t}{v}P.{csg}"
-                    forms = set(gi.generate(lemma, key, tags=_VERB_TAGS).keys())
+                    forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                     if forms:
                         result[key] = forms
         return result
