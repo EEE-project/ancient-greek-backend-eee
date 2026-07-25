@@ -381,6 +381,52 @@ class AncientGreekBackend:
         self._tag_cache[pos] = result
         return result
 
+    def analyze(self, form: str) -> list[dict]:
+        """Reverse lookup: candidate (lemma, pos, UD features) analyses for a surface form.
+
+        Tries the reverse-stemming path (GreekInflexion.parse()) against every
+        loaded pos in turn and maps each raw stemming-rule key to its UD FEATS
+        row via get_tags(pos). Tag strings are dot-prefixed for noun/adjective/
+        pronoun but not verb (matches get_tags()'s own tag column -- see its
+        docstring); parse() returns the bare key regardless of pos, so the dot
+        is added back here before the lookup.
+
+        Ambiguous by design, not just in the linguistic sense: the underlying
+        reverse-stemming can over-match, e.g. a masc. 2nd-declension
+        nominative singular currently comes back with a spurious NSF/APF
+        candidate alongside the correct NSM one -- passed through as-is
+        rather than filtered; disambiguation is explicitly out of scope here
+        (see the TODO's own deferred "ambiguity model" item).
+
+        Pronoun forms are override-only (no stemming ruleset -- see
+        load_pron_lexicons()'s own docstring), so GreekInflexion.parse(),
+        which walks the stemming rule set unconditionally, cannot be used
+        for pos="pronoun" at all; it is skipped here rather than crashing.
+        A form that is only a pronoun (never also a verb/noun/adjective
+        surface form) therefore yields [] -- pronoun reverse-lookup would
+        need a separate form_override-scanning path, not attempted here.
+
+        Returns [] for a form matching nothing in any loaded pos's lexicon.
+        """
+        results = []
+        for pos in ("verb", "noun", "adjective", "pronoun"):
+            gi = self._get_gi(pos)
+            if gi.ruleset is None:
+                continue
+            dot = "" if pos == "verb" else "."
+            tags = self.get_tags(pos)
+            for lemma, key in gi.parse(form):
+                wanted = dot + key
+                for row in tags:
+                    if row["tag"] == wanted:
+                        results.append({
+                            "lemma": lemma,
+                            "pos": pos,
+                            "tag": row["tag"],
+                            "features": {k: v for k, v in row.items() if k != "tag"},
+                        })
+        return results
+
     def list_lemmas(self, pos: str) -> list[str]:
         if pos not in ("verb", "noun", "adjective", "pronoun"):
             return []

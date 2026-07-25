@@ -342,6 +342,53 @@ def test_get_tags_verb_first_row(backend):
     }
 
 
+# --- analyze ---
+
+def test_analyze_verb_returns_lemma_pos_tag_features(backend):
+    results = backend.analyze("βάλλω")
+    assert {"lemma": "βάλλω", "pos": "verb", "tag": "PAI.1S",
+            "features": {"Tense": "Pres", "VerbForm": "Fin", "Voice": "Act",
+                          "Mood": "Ind", "Person": "1", "Number": "Sing"}} in results
+
+
+def test_analyze_verb_ambiguous_ind_and_sub(backend):
+    # βάλλω is thematic, so its bare present-stem form is syncretic between
+    # indicative and subjunctive 1st singular -- both are real candidates.
+    tags = {r["tag"] for r in backend.analyze("βάλλω")}
+    assert tags == {"PAI.1S", "PAS.1S"}
+
+
+def test_analyze_adjective_dot_prefix_applied(backend):
+    results = backend.analyze("δίκαιος")
+    assert {"lemma": "δίκαιος", "pos": "adjective", "tag": ".NSM",
+            "features": {"Case": "Nom", "Number": "Sing", "Gender": "Masc"}} in results
+
+
+def test_analyze_noun_includes_known_overmatch(backend):
+    # Documented reverse-stemming limitation, not a bug in analyze() itself:
+    # θεός's masc. NSM candidate is currently missing and a spurious NSF/APF
+    # pair comes back instead. Pinned so an upstream precision fix is a
+    # deliberate test update, not a silent behavior change.
+    tags = {r["tag"] for r in backend.analyze("θεός")}
+    assert tags == {".NSF", ".APF"}
+
+
+def test_analyze_unknown_form_returns_empty_list(backend):
+    assert backend.analyze("xyzabc") == []
+
+
+def test_analyze_pronoun_form_returns_empty_list_not_crash(backend):
+    # Pronoun lexicons load with ruleset=None (form_override-only -- see
+    # load_pron_lexicons()); analyze() must skip pos="pronoun" rather than
+    # let GreekInflexion.parse() crash on the missing stemming rule set.
+    assert backend.analyze("οὗτος") == []
+
+
+def test_analyze_result_features_never_contain_tag_key(backend):
+    for r in backend.analyze("βάλλω") + backend.analyze("δίκαιος"):
+        assert "tag" not in r["features"]
+
+
 # --- caching: second call returns consistent results ---
 
 def test_noun_cache_consistent(backend):

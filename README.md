@@ -54,6 +54,11 @@ forms = backend.inflect("ἀκούω", {
     "Mood": "Imp", "Person": "2", "Number": "Sing"
 }, "verb")
 # {"ἄκουε"}
+
+backend.analyze("βάλλω")
+# [{"lemma": "βάλλω", "pos": "verb", "tag": "PAI.1S",
+#   "features": {"Tense": "Pres", "VerbForm": "Fin", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"}},
+#  {"lemma": "βάλλω", "pos": "verb", "tag": "PAS.1S", ...}]  # syncretic with the subjunctive
 ```
 
 ### Lexicon flavors
@@ -121,6 +126,12 @@ then generates the full paradigm automatically.
   Fem automatically when a Masc key is absent.
 - Nominal coverage is limited to Pratt. Nouns from Dik and Keller/Russell are
   not yet included.
+- `analyze()` (reverse lookup) has no disambiguation: it returns every
+  candidate the underlying reverse-stemming produces, including known
+  over-matches (e.g. a masc. 2nd-declension nominative singular currently
+  also comes back tagged as fem. nom./acc. plural). It also does not cover
+  pronouns — their lexicons are override-only with no stemming ruleset for
+  `parse()` to walk, so `pos="pronoun"` is skipped rather than attempted.
 
 
 ## Development
@@ -133,10 +144,20 @@ uv run pytest
 
 ## Status
 
-v0.5.0 — `inflect()`, `paradigm()`, `list_lemmas()`, and `get_slot_templates()` for verbs, nouns, adjectives, and pronouns.
+v0.6.0 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.6.0** — Added `analyze(form)`: reverse lookup from a surface form to
+candidate `{"lemma", "pos", "tag", "features"}` analyses, one dict per
+candidate. Wraps `greek_inflexion_eee.GreekInflexion.parse()` (already
+present upstream, not previously surfaced) and maps its raw stemming-rule
+key to UD FEATS via the same per-pos tag table `get_tags()`/
+`get_slot_templates()` already use. Ambiguous by design — a syncretic
+surface form legitimately yields multiple candidates, and the underlying
+reverse-stemming can also over-match (see Limitations) — disambiguation is
+explicitly out of scope. Pronouns are not covered (see Limitations).
 
 **v0.5.0** — Added `"pronoun"` as a fourth part of speech, covering 10 lemmas
 across four families: personal (ἐγώ, σύ — Case+Number+Person shape, no
