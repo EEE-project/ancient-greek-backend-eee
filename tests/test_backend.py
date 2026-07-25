@@ -487,6 +487,64 @@ def test_default_still_works_after_lexicon_param():
     assert result
 
 
+def test_for_period_byzantine_matches_hand_written_list():
+    b = AncientGreekBackend.for_period("byzantine")
+    assert b._lexicons == ("lxx", "morphgnt", "pratt", "ltrg", "lsj", "byzantine")
+
+
+def test_for_period_attic_matches_hand_written_list():
+    b = AncientGreekBackend.for_period("attic")
+    assert b._lexicons == ("pratt", "ltrg", "lsj")
+
+
+def test_for_period_hellenistic_koine_matches_hand_written_list():
+    b = AncientGreekBackend.for_period("hellenistic_koine")
+    assert b._lexicons == ("lxx",)
+
+
+def test_for_period_roman_koine_matches_hand_written_list():
+    b = AncientGreekBackend.for_period("roman_koine")
+    assert b._lexicons == ("morphgnt",)
+
+
+def test_for_period_epic_matches_hand_written_list():
+    b = AncientGreekBackend.for_period("epic")
+    assert b._lexicons == ("homer",)
+
+
+def test_for_period_extra_lexicons_appended_after_preset():
+    b = AncientGreekBackend.for_period("epic", extra_lexicons=["odyssey_morpheus"])
+    assert b._lexicons == ("homer", "odyssey_morpheus")
+
+
+def test_for_period_unknown_period_raises():
+    with pytest.raises(ValueError, match="Unknown period"):
+        AncientGreekBackend.for_period("classical")
+
+
+def test_for_period_no_periods_raises():
+    with pytest.raises(ValueError, match="requires at least one period"):
+        AncientGreekBackend.for_period()
+
+
+def test_for_period_multiple_periods_union_with_extra():
+    b = AncientGreekBackend.for_period("epic", "attic", "hellenistic_koine", "roman_koine",
+                                        extra_lexicons=["odyssey_morpheus"])
+    assert b._lexicons == ("homer", "pratt", "ltrg", "lsj", "lxx", "morphgnt", "odyssey_morpheus")
+
+
+def test_for_period_multiple_periods_produces_same_lemmas_regardless_of_order():
+    b1 = AncientGreekBackend.for_period("epic", "attic", "hellenistic_koine", "roman_koine")
+    b2 = AncientGreekBackend.for_period("roman_koine", "hellenistic_koine", "attic", "epic")
+    assert set(b1.list_lemmas("verb")) == set(b2.list_lemmas("verb"))
+
+
+def test_for_period_byzantine_produces_working_backend():
+    b = AncientGreekBackend.for_period("byzantine")
+    assert "γιγνώσκω" in b.list_lemmas("verb")
+    assert "ὁράω" in b.list_lemmas("verb")
+
+
 # --- get_slot_templates (bundled data) ---
 
 def test_get_slot_templates_verb_en_nonempty(backend):

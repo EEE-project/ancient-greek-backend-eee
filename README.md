@@ -46,6 +46,22 @@ backend = AncientGreekBackend(lexicons=["homer"])
 # Merged corpora
 backend = AncientGreekBackend(lexicons=["homer", "lxx", "morphgnt"])
 
+# Named historical period (avoids hand-copying the lexicon list; the lexicon
+# names are an implementation detail behind the period, not the identifier)
+backend = AncientGreekBackend.for_period("byzantine")
+# same as: AncientGreekBackend(lexicons=["lxx", "morphgnt", "pratt", "ltrg", "lsj", "byzantine"])
+
+# Other periods: "epic" (Homer), "attic" (Classical Attic — pratt+ltrg+lsj),
+# "hellenistic_koine" (Septuagint), "roman_koine" (NT)
+
+# ...with extra lexicons layered on top of the preset
+backend = AncientGreekBackend.for_period("epic", extra_lexicons=["odyssey_morpheus"])
+
+# Multiple periods union into one backend (order doesn't affect the result —
+# lexicon merging is a set union, confirmed empirically, not a sequential
+# override)
+backend = AncientGreekBackend.for_period("epic", "attic", "hellenistic_koine", "roman_koine")
+
 # Custom lexicon file (absolute path, same YAML format)
 backend = AncientGreekBackend(lexicons=["pratt", "/path/to/my_course.yaml"])
 
@@ -144,10 +160,19 @@ uv run pytest
 
 ## Status
 
-v0.6.0 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
+v0.7.0 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.7.0** — Added `AncientGreekBackend.for_period(*periods, extra_lexicons=())`:
+constructs a backend from one or more named historical periods (`"epic"`,
+`"attic"`, `"hellenistic_koine"`, `"roman_koine"`, `"byzantine"`) instead of
+hand-writing its lexicon list — the lexicon names stay an implementation
+detail behind the period name. Multiple periods union into one backend
+(order-independent, since lexicon merging is a set union). These lists were
+previously duplicated identically across 8 call sites (7 Odyssey lesson
+notebooks + eee-project's example notebook) with no shared source of truth.
 
 **v0.6.0** — Added `analyze(form)`: reverse lookup from a surface form to
 candidate `{"lemma", "pos", "tag", "features"}` analyses, one dict per

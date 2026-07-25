@@ -60,6 +60,29 @@ _VERB_PERSONS = ["1S", "2S", "3S", "2D", "3D", "1P", "2P", "3P"]
 _VERB_IMP_PN  = ["2S", "3S", "2D", "3D", "2P", "3P"]
 _VERB_TAGS = {"final-nu-aai.3s"}
 
+# Named historical-period presets for consumers that want a period by name
+# instead of hand-copying its lexicon list (the lexicon names are an
+# implementation detail behind the period, not the identifier callers use --
+# matches eee-project's own diachronic-dropdown period labels,
+# _GRC_LEX_PERIOD in notebook_utils.py, though that dict keys by lexicon
+# name for a different purpose -- UI tab display -- and isn't imported here:
+# eee-project is only a dev dependency of this package (used for its own
+# test suite), not a runtime one, so core construction can't rely on it
+# being installed). These lists were previously hand-copied identically
+# across 8 call sites (7 Odyssey lesson notebooks + eee-project's example
+# notebook) with no shared source of truth -- a typo or partial update in
+# any one copy would silently drift from the rest.
+# "byzantine" merges onto the Attic/Koine bases (see greek-inflexion-eee's
+# README: byzantine is a sparse exceptions layer, not a standalone stemming
+# engine) so it inherits their full lemma coverage.
+_PERIOD_PRESETS: dict[str, tuple[str, ...]] = {
+    "epic": ("homer",),
+    "attic": ("pratt", "ltrg", "lsj"),
+    "hellenistic_koine": ("lxx",),
+    "roman_koine": ("morphgnt",),
+    "byzantine": ("lxx", "morphgnt", "pratt", "ltrg", "lsj", "byzantine"),
+}
+
 
 class AncientGreekBackend:
     """MorphologyBackend implementation for Ancient Greek (ISO 639-2: grc).
@@ -95,6 +118,38 @@ class AncientGreekBackend:
         self._tag_cache: dict[str, list] = {}
         self._tag_index_cache: dict[str, dict[str, list]] = {}
         self._lemma_cache: dict[str, list[str]] = {}
+
+    @classmethod
+    def for_period(
+        cls, *periods: str, extra_lexicons: "tuple[str, ...] | list[str]" = ()
+    ) -> "AncientGreekBackend":
+        """Construct a backend from one or more named historical periods.
+
+        Lexicon merging is a set union (confirmed via greek_inflexion_eee's
+        load_lexicons: "later entries add new stems without removing
+        existing ones"), so the order periods are listed in doesn't affect
+        the result -- multiple periods can be combined freely for a
+        broader-coverage backend (e.g. a "recognize anything" union across
+        several periods) without needing to reproduce a specific hand-tuned
+        lexicon order.
+
+        Args:
+            *periods: one or more of _PERIOD_PRESETS' keys ("epic", "attic",
+                "hellenistic_koine", "roman_koine", "byzantine")
+            extra_lexicons: additional lexicon names to layer on top of the
+                preset(s) (e.g. a course-specific lexicon added to "epic")
+
+        Raises:
+            ValueError: if no periods given, or a period is not a known preset name
+        """
+        if not periods:
+            raise ValueError("for_period() requires at least one period name.")
+        lexicons: list[str] = []
+        for period in periods:
+            if period not in _PERIOD_PRESETS:
+                raise ValueError(f"Unknown period: {period!r}. Expected one of {sorted(_PERIOD_PRESETS)}.")
+            lexicons.extend(_PERIOD_PRESETS[period])
+        return cls(lexicons=lexicons + list(extra_lexicons))
 
     @staticmethod
     def _loaders():
