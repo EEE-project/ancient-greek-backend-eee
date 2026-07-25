@@ -74,6 +74,13 @@ _CASE = {'Nom': 'N', 'Acc': 'A', 'Gen': 'G', 'Dat': 'D', 'Voc': 'V'}
 _NUM  = {'Sing': 'S', 'Plur': 'P', 'Dual': 'D'}
 _GEND = {'Masc': 'M', 'Fem': 'F', 'Neut': 'N'}
 
+# Leading marker on every Case+Number+Gender(+Person) key (e.g. ".NSM") --
+# distinguishes it from a verb's bare TVM.person key (e.g. "PAI.1S", whose
+# own "." separates tense/voice/mood from person, not a marker). Every CSG-
+# key composer below, and every cache in backend.py keyed the same way,
+# shares this one constant instead of restating "." independently.
+CSG_TAG_PREFIX = '.'
+
 
 def ag_verb_key(features: dict[str, str]) -> str | None:
     """Compose a TVM key string from UD verb features.
@@ -109,7 +116,7 @@ def ag_noun_key(features: dict[str, str]) -> str | None:
     gender = features.get('Gender')
     if gender is None:
         return None
-    return '.' + _CASE[case] + _NUM[number] + _GEND[gender]
+    return CSG_TAG_PREFIX + _CASE[case] + _NUM[number] + _GEND[gender]
 
 
 def ag_adj_key(features: dict[str, str]) -> str | None:
@@ -124,7 +131,7 @@ def ag_adj_key(features: dict[str, str]) -> str | None:
     gender = features.get('Gender')
     if gender is None:
         return None
-    return '.' + _CASE[case] + _NUM[number] + _GEND[gender]
+    return CSG_TAG_PREFIX + _CASE[case] + _NUM[number] + _GEND[gender]
 
 
 def ag_pron_key(features: dict[str, str]) -> str:
@@ -156,4 +163,4 @@ def ag_pron_key(features: dict[str, str]) -> str:
     case = features['Case']
     number = features['Number']
     person = features['Person']
-    return '.' + _CASE[case] + _NUM[number] + person
+    return CSG_TAG_PREFIX + _CASE[case] + _NUM[number] + person

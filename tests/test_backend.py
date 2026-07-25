@@ -379,14 +379,17 @@ def test_analyze_unknown_form_returns_empty_list(backend):
 
 def test_analyze_pronoun_form_returns_empty_list_not_crash(backend):
     # Pronoun lexicons load with ruleset=None (form_override-only -- see
-    # load_pron_lexicons()); analyze() must skip pos="pronoun" rather than
-    # let GreekInflexion.parse() crash on the missing stemming rule set.
+    # load_pron_lexicons()), so GreekInflexion.parse() would crash on the
+    # missing stemming rule set; analyze() excludes pos="pronoun" from its
+    # loop entirely rather than attempting it.
     assert backend.analyze("οὗτος") == []
 
 
-def test_analyze_result_features_never_contain_tag_key(backend):
-    for r in backend.analyze("βάλλω") + backend.analyze("δίκαιος"):
-        assert "tag" not in r["features"]
+def test_tag_index_keeps_every_row_for_a_shared_tag(backend):
+    # .NSM is shared by 4 PronType families (Dem/Rel/Int/Ind) in
+    # pronoun-tags.tsv; a plain tag->row dict would silently keep only one.
+    rows = backend._tag_index("pronoun").get(".NSM", [])
+    assert {r["PronType"] for r in rows} == {"Dem", "Rel", "Int", "Ind"}
 
 
 # --- caching: second call returns consistent results ---

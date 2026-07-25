@@ -1,7 +1,7 @@
 import csv
 import importlib.resources as _pkg_data
 
-from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key, ag_pron_key
+from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key, ag_pron_key, CSG_TAG_PREFIX
 
 _POS_TSV = {
     "noun": "noun-tags.tsv", "adjective": "adj-tags.tsv", "verb": "verb-tags.tsv",
@@ -93,6 +93,7 @@ class AncientGreekBackend:
         self._paradigm_cache: dict[tuple[str, str], dict[str, set[str]]] = {}
         self._slot_cache: dict[tuple[str, str], list] = {}
         self._tag_cache: dict[str, list] = {}
+        self._tag_index_cache: dict[str, dict[str, list]] = {}
         self._lemma_cache: dict[str, list[str]] = {}
 
     @staticmethod
@@ -199,8 +200,8 @@ class AncientGreekBackend:
             # the exact same (lemma, key) pair a second time.
             forms = ns_forms.get(csgsuffix) or set(gi.generate(lemma, csgsuffix).keys())
             if forms:
-                # store with dot prefix to match ag_noun_key / ag_adj_key output
-                cache["." + csgsuffix] = forms
+                # CSG_TAG_PREFIX to match ag_noun_key / ag_adj_key output
+                cache[CSG_TAG_PREFIX + csgsuffix] = forms
         if pos == "adjective":
             adv = self._derive_adverb(lemma, cache.get(".GPM"))
             if adv:
@@ -258,7 +259,7 @@ class AncientGreekBackend:
         for csgsuffix in _CSG_KEYS:
             forms = self._sweep_form(gi, lemma, csgsuffix)
             if forms:
-                cache["." + csgsuffix] = forms
+                cache[CSG_TAG_PREFIX + csgsuffix] = forms
         return cache
 
     def _build_pronoun_cache_personal(self, lemma: str) -> dict[str, set[str]]:
@@ -270,7 +271,7 @@ class AncientGreekBackend:
                     key = f"{c}{n}{p}"
                     forms = self._sweep_form(gi, lemma, key)
                     if forms:
-                        cache["." + key] = forms
+                        cache[CSG_TAG_PREFIX + key] = forms
         return cache
 
     @staticmethod
@@ -354,7 +355,7 @@ class AncientGreekBackend:
             return None
         result = [
             SlotTemplate(label=r["tag"], tag_type="ud", tag=r["tag"],
-                         features={k: v for k, v in r.items() if k != "tag"})
+                         features=self._row_features(r))
             for r in tags
         ]
         if pos == "adjective":
@@ -381,15 +382,34 @@ class AncientGreekBackend:
         self._tag_cache[pos] = result
         return result
 
+    @staticmethod
+    def _row_features(row: dict[str, str]) -> dict[str, str]:
+        """A get_tags() row minus its 'tag' key -- shared by get_slot_templates() and analyze()."""
+        return {k: v for k, v in row.items() if k != "tag"}
+
+    def _tag_index(self, pos: str) -> dict[str, list[dict[str, str]]]:
+        """tag -> rows sharing that tag, built from get_tags(pos) and cached per pos.
+
+        A plain tag -> row dict would silently keep only the last row for a
+        shared tag; pronoun tags legitimately repeat across PronType families
+        (see the comment above _POS_TSV), so this keeps every row.
+        """
+        if pos not in self._tag_index_cache:
+            index: dict[str, list[dict[str, str]]] = {}
+            for row in self.get_tags(pos):
+                index.setdefault(row["tag"], []).append(row)
+            self._tag_index_cache[pos] = index
+        return self._tag_index_cache[pos]
+
     def analyze(self, form: str) -> list[dict]:
         """Reverse lookup: candidate (lemma, pos, UD features) analyses for a surface form.
 
         Tries the reverse-stemming path (GreekInflexion.parse()) against every
         loaded pos in turn and maps each raw stemming-rule key to its UD FEATS
-        row via get_tags(pos). Tag strings are dot-prefixed for noun/adjective/
-        pronoun but not verb (matches get_tags()'s own tag column -- see its
-        docstring); parse() returns the bare key regardless of pos, so the dot
-        is added back here before the lookup.
+        row(s) via _tag_index(pos). Tag strings carry CSG_TAG_PREFIX
+        (_ag_features.py) for noun/adjective but not verb; parse() returns the
+        bare key regardless of pos, so the prefix is added back here before
+        the lookup.
 
         Ambiguous by design, not just in the linguistic sense: the underlying
         reverse-stemming can over-match, e.g. a masc. 2nd-declension
@@ -400,31 +420,28 @@ class AncientGreekBackend:
 
         Pronoun forms are override-only (no stemming ruleset -- see
         load_pron_lexicons()'s own docstring), so GreekInflexion.parse(),
-        which walks the stemming rule set unconditionally, cannot be used
-        for pos="pronoun" at all; it is skipped here rather than crashing.
-        A form that is only a pronoun (never also a verb/noun/adjective
-        surface form) therefore yields [] -- pronoun reverse-lookup would
-        need a separate form_override-scanning path, not attempted here.
+        which walks the stemming rule set unconditionally, would crash for
+        pos="pronoun" -- it is excluded from the pos loop entirely rather
+        than loaded and discarded. A form that is only a pronoun (never also
+        a verb/noun/adjective surface form) therefore yields [] -- pronoun
+        reverse-lookup would need a separate form_override-scanning path,
+        not attempted here.
 
         Returns [] for a form matching nothing in any loaded pos's lexicon.
         """
         results = []
-        for pos in ("verb", "noun", "adjective", "pronoun"):
+        for pos in ("verb", "noun", "adjective"):
             gi = self._get_gi(pos)
-            if gi.ruleset is None:
-                continue
-            dot = "" if pos == "verb" else "."
-            tags = self.get_tags(pos)
+            dot = "" if pos == "verb" else CSG_TAG_PREFIX
+            index = self._tag_index(pos)
             for lemma, key in gi.parse(form):
-                wanted = dot + key
-                for row in tags:
-                    if row["tag"] == wanted:
-                        results.append({
-                            "lemma": lemma,
-                            "pos": pos,
-                            "tag": row["tag"],
-                            "features": {k: v for k, v in row.items() if k != "tag"},
-                        })
+                for row in index.get(dot + key, ()):
+                    results.append({
+                        "lemma": lemma,
+                        "pos": pos,
+                        "tag": row["tag"],
+                        "features": self._row_features(row),
+                    })
         return results
 
     def list_lemmas(self, pos: str) -> list[str]:
