@@ -137,13 +137,20 @@ then generates the full paradigm automatically.
 
 ## Limitations
 
-- Two-termination adjectives (ἀληθής, ἄδικος) share Masc/Fem forms, and both
-  are generated directly under their own Masc and Fem keys — no runtime
-  fallback needed. `ἄδικος`-type (2-1-2, compound) adjectives get this from
-  identical `stems:` entries for both genders; `ἀληθής`-type (3-3 sigma-stem)
-  adjectives get it from dedicated masculine stemming rules added in
-  greek-inflexion-eee v0.6.1 (previously only the feminine oblique cells were
-  reachable — see [greek-inflexion-eee#3](https://codeberg.org/EEE-project/greek-inflexion-eee/pulls/3)).
+- Two-termination adjectives (ἀληθής, ἄδικος, μείζων, ἐυπλόκαμος) share
+  Masc/Fem forms, generated directly under their own Masc and Fem keys in
+  every bundled lexicon — no runtime fallback. There used to be one
+  (`_inflect_nominal`: fall back to the Fem key when Masc was absent), added
+  for `ἀληθής` specifically, but it fired for *any* adjective with a missing
+  Masc key — confirmed silently wrong for `ἴσος` (regular 2-1-2, Masc/Fem
+  genuinely differ), which returned the Fem form as if it were Masc rather
+  than an empty set. Removed entirely once every genuinely-2-termination
+  adjective's data was independently verified complete (real Perseids
+  Morpheus lookups, not declension-class guessing) — see
+  [greek-inflexion-eee#3](https://codeberg.org/EEE-project/greek-inflexion-eee/pulls/3)
+  and [issue #11](https://codeberg.org/EEE-project/ancient-greek-backend-eee/issues/11).
+  Querying a gender an adjective genuinely lacks now always returns an empty
+  set, never a wrong-gender substitute.
 - Nominal coverage is limited to Pratt. Nouns from Dik and Keller/Russell are
   not yet included.
 - `analyze()` (reverse lookup) has no disambiguation: it returns every

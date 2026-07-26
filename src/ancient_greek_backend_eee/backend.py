@@ -221,12 +221,7 @@ class AncientGreekBackend:
                 if s and s in cache:
                     result |= cache[s]
             return result
-        result = cache.get(suffix, set())
-        # Two-termination adjectives (e.g. ἀληθής): Pratt lexicon stores only Fem keys for
-        # oblique cases; Masc is identical so fall back to the Fem key when Masc is absent.
-        if not result and pos == "adjective" and suffix and suffix.endswith("M"):
-            result = cache.get(suffix[:-1] + "F", set())
-        return result
+        return cache.get(suffix, set())
 
     def _build_nominal_cache(self, lemma: str, pos: str) -> dict[str, set[str]]:
         gi = self._get_gi(pos)

@@ -756,6 +756,31 @@ def test_adjective_paradigm_still_has_all_genders(backend):
     assert genders == {"M", "F", "N"}, f"expected all 3 genders, got {genders}"
 
 
+def test_inflect_adjective_no_cross_gender_fallback(backend):
+    """ancient-greek-backend-eee#11: ἴσος is a regular 2-1-2 adjective where
+    masc/fem genuinely differ (GSM ἴσου vs GSF ἴσης) -- its only lexicon
+    entry anywhere is a single Morpheus gap-fill cell for GSF alone. The
+    removed Masc<-Fem runtime fallback used to silently return the feminine
+    form here as if it were masculine; querying masc must now return empty,
+    not a wrong answer."""
+    result = backend.inflect(
+        "ἴσος", {"Case": "Gen", "Number": "Sing", "Gender": "Masc"}, "adjective"
+    )
+    assert result == set()
+
+
+def test_inflect_adjective_two_termination_unaffected(backend):
+    """ἀληθής (sigma-stem, greek-inflexion-eee#3) and ἄδικος (identical
+    stems: for both genders) are genuinely 2-termination and must keep
+    working via their own complete cache data, with no fallback involved."""
+    assert backend.inflect(
+        "ἀληθής", {"Case": "Gen", "Number": "Sing", "Gender": "Masc"}, "adjective"
+    ) == {"ἀληθοῦς"}
+    assert backend.inflect(
+        "ἄδικος", {"Case": "Gen", "Number": "Sing", "Gender": "Masc"}, "adjective"
+    ) == {"ἀδίκου"}
+
+
 # --- pronouns: get_tags / get_slot_templates ---
 # pronoun-tags.tsv legitimately has multiple rows sharing the same tag
 # string (e.g. .NSM appears once per pronoun family that attests it --
