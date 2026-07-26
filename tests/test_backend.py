@@ -268,9 +268,21 @@ def test_paradigm_adj_adverb_not_final_accented(backend):
     assert result.get("ADV") == {"δικαίως"}
 
 
-def test_paradigm_adj_adverb_no_match(backend):
-    # ἀληθής ends in -ής, not -ος → no adverb derived
+def test_paradigm_adj_adverb_sigma_stem(backend):
+    """ἀληθής (3rd-declension sigma-stem, masc/fem oblique cases now shared
+    per the ancient-greek-backend-eee#4 fix) derives ἀληθῶς the same way
+    any other adjective with real genitive-plural coverage does -- adverb
+    derivation is based on gen. plural availability, not the lemma's own
+    ending shape, contrary to what this test used to assume."""
     result = backend.paradigm("ἀληθής", "adjective")
+    assert result.get("ADV") == {"ἀληθῶς"}
+
+
+def test_paradigm_adj_adverb_no_coverage(backend):
+    # A made-up lemma no lexicon has ever heard of -- empty cache, so no
+    # spurious adverb should be derived (see _build_nominal_cache's
+    # "if pos == 'adjective' and cache:" gate).
+    result = backend.paradigm("ξαβδοπός", "adjective")
     assert "ADV" not in result
 
 

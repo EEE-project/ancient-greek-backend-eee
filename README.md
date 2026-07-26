@@ -137,9 +137,13 @@ then generates the full paradigm automatically.
 
 ## Limitations
 
-- Two-termination adjectives (ἀληθής, ἄδικος) share Masc/Fem forms. The
-  database stores only Fem keys for oblique cases; the backend falls back to
-  Fem automatically when a Masc key is absent.
+- Two-termination adjectives (ἀληθής, ἄδικος) share Masc/Fem forms, and both
+  are generated directly under their own Masc and Fem keys — no runtime
+  fallback needed. `ἄδικος`-type (2-1-2, compound) adjectives get this from
+  identical `stems:` entries for both genders; `ἀληθής`-type (3-3 sigma-stem)
+  adjectives get it from dedicated masculine stemming rules added in
+  greek-inflexion-eee v0.6.1 (previously only the feminine oblique cells were
+  reachable — see [greek-inflexion-eee#3](https://codeberg.org/EEE-project/greek-inflexion-eee/pulls/3)).
 - Nominal coverage is limited to Pratt. Nouns from Dik and Keller/Russell are
   not yet included.
 - `analyze()` (reverse lookup) has no disambiguation: it returns every
