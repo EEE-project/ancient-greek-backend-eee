@@ -573,9 +573,18 @@ class AncientGreekBackend:
                 if forms:
                     result[key] = forms
                 # participle (all 45 case/number/gender/dual cells -- same
-                # _CSG_KEYS enumeration nouns/adjectives use; no participle
-                # in the lexicon has dual data, so those cells never
-                # actually surface anything)
+                # _CSG_KEYS enumeration nouns/adjectives use). The claim
+                # that used to be here -- "no participle in the lexicon
+                # has dual data, so those cells never actually surface
+                # anything" -- was wrong: dual participles are regularly
+                # formed for many verbs (e.g. αἰνέω -> PAP.NDF αἰνεούσα),
+                # confirmed directly against real paradigm() output, not
+                # assumed. Most (lemma, tense, voice) combinations still
+                # come back empty, but not uniformly/predictably enough
+                # to safely prune the way the person-based dual sweep
+                # was (that had a clean, verb-tags.tsv-backed allowlist
+                # of exactly which combos work; participles have no such
+                # TSV coverage at all to check against).
                 for csg in _CSG_KEYS:
                     key = f"{t}{v}P.{csg}"
                     forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
