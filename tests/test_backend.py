@@ -247,8 +247,8 @@ def test_paradigm_adj_returns_dict(backend):
 
 
 def test_paradigm_adj_adverb_regular(backend):
-    result = backend.paradigm("καλός", "adjective")
-    assert result.get("ADV") == {"καλῶς"}
+    result = backend.paradigm("αὐτός", "adjective")
+    assert result.get("ADV") == {"αὐτῶς"}
 
 
 def test_paradigm_adj_adverb_agathos(backend):

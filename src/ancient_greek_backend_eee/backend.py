@@ -259,7 +259,12 @@ class AncientGreekBackend:
             if forms:
                 # CSG_TAG_PREFIX to match ag_noun_key / ag_adj_key output
                 cache[CSG_TAG_PREFIX + csgsuffix] = forms
-        if pos == "adjective":
+        # cache must already have at least one real declension cell --
+        # otherwise _derive_adverb's naive-ending fallback path (no gen.
+        # plural to check against) can mechanically derive a spurious
+        # adverb for an adjective the engine doesn't actually recognize
+        # at all (e.g. καλός with none of these lexicons loaded).
+        if pos == "adjective" and cache:
             adv = self._derive_adverb(lemma, cache.get(".GPM"))
             if adv:
                 cache["ADV"] = adv

@@ -160,10 +160,20 @@ uv run pytest
 
 ## Status
 
-v0.7.1 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
+v0.7.2 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
-Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
+Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `ἀγαθός` → `ἀγαθῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.7.2** — Fixed `_build_nominal_cache` deriving a spurious `"ADV"` entry for
+adjective lemmas the loaded lexicon(s) don't actually cover: the naive
+`-ος`/`-ός` → `-ῶς` ending-swap fallback in `_derive_adverb` ran even when
+`paradigm()` had zero real declension cells for the lemma, mechanically
+inventing an adverb for a word the engine doesn't recognize at all (e.g.
+`καλός`, `μικρός`, `χαλεπός` with only the Pratt lexicon loaded — 9 of the
+Palaestra course's own adjective-vocabulary lemmas confirmed affected). The
+adverb-derivation step now only runs once the adjective already has at least
+one real paradigm cell.
 
 **v0.7.1** — `_build_verb_paradigm`'s dual-number sweep now prunes against
 `get_tags("verb")`'s own tag list instead of trying every tense/voice/mood
