@@ -50,14 +50,16 @@ _PERSONAL_PRONOUN_LEMMAS = {"ἐγώ", "σύ"}
 # Indicative tense/voice/mood combinations for verb paradigm
 _VERB_TENSES  = list("PIAFX")   # Pres, Imp, Aor, Fut, Perf
 _VERB_VOICES  = list("AMP")
-# No "1D": Ancient Greek has no first-person dual. 2D/3D are tried for every
-# tense/voice/mood combination here (same as every other person) even though
+# No "1D": Ancient Greek has no first-person dual. 2D/3D are candidates for
+# every tense/voice/mood combination here (same as every other person), but
 # the stemming engine only actually has dual rules for a subset (Pres/Imp/
-# Fut/Perf Act Ind, Pres Act Imp) -- harmless, since only non-empty results
-# get stored below; matches this same exhaustive-sweep-then-filter shape
-# already used for every other person/tense/voice/mood combination.
+# Fut/Perf Act Ind, Pres Act Imp) -- the other ~111 of ~120 dual attempts per
+# lemma are guaranteed-empty stemming-engine calls discovered by brute force
+# every time; _build_verb_paradigm prunes these against get_tags("verb")'s
+# own tag list (verb-tags.tsv's 9 real dual rows) before attempting them.
 _VERB_PERSONS = ["1S", "2S", "3S", "2D", "3D", "1P", "2P", "3P"]
 _VERB_IMP_PN  = ["2S", "3S", "2D", "3D", "2P", "3P"]
+_VERB_DUAL_PERSONS = {"2D", "3D"}
 _VERB_TAGS = {"final-nu-aai.3s"}
 
 # Named historical-period presets for consumers that want a period by name
@@ -542,18 +544,26 @@ class AncientGreekBackend:
     def _build_verb_paradigm(self, lemma: str) -> dict[str, set[str]]:
         gi = self._get_gi("verb")
         result: dict[str, set[str]] = {}
+        # _tag_index already caches tag -> rows per instance; reused here as a
+        # plain membership check rather than rebuilding a separate set from
+        # get_tags() on every call.
+        known_tags = self._tag_index("verb")
         for t in _VERB_TENSES:
             for v in _VERB_VOICES:
                 # indicative / subjunctive / optative
                 for m in "ISO":
                     for pn in _VERB_PERSONS:
                         key = f"{t}{v}{m}.{pn}"
+                        if pn in _VERB_DUAL_PERSONS and key not in known_tags:
+                            continue
                         forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                         if forms:
                             result[key] = forms
                 # imperative
                 for pn in _VERB_IMP_PN:
                     key = f"{t}{v}D.{pn}"
+                    if pn in _VERB_DUAL_PERSONS and key not in known_tags:
+                        continue
                     forms = self._sweep_form(gi, lemma, key, tags=_VERB_TAGS)
                     if forms:
                         result[key] = forms

@@ -68,6 +68,30 @@ def test_verb_aor_act_ind_2d_has_no_rule_coverage(backend):
     assert result == set()
 
 
+def test_build_verb_paradigm_prunes_dual_sweep_to_9_known_combos():
+    """The dual-number sweep tries every tense/voice/mood combination for
+    2D/3D (~120 attempts per lemma) even though only 9 combinations ever
+    have real stemming data (verb-tags.tsv's 9 dual rows). This asserts
+    the pruning actually happens -- only those 9 exact keys are ever
+    attempted, not just that the (already-empty-filtered) result is
+    correct, which the tests above already cover."""
+    b = AncientGreekBackend(lexicons=["homer"])
+    seen_keys = []
+    orig_sweep = b._sweep_form
+
+    def counting_sweep(gi, lemma, key, *, tags=None):
+        seen_keys.append(key)
+        return orig_sweep(gi, lemma, key, tags=tags)
+
+    b._sweep_form = counting_sweep
+    b._build_verb_paradigm("λύω")
+
+    dual_keys_tried = {k for k in seen_keys if k.split(".")[-1] in ("2D", "3D")}
+    valid_dual_tags = {row["tag"] for row in b.get_tags("verb") if row["tag"].split(".")[-1] in ("2D", "3D")}
+    assert dual_keys_tried == valid_dual_tags
+    assert len(dual_keys_tried) == 9
+
+
 def test_verb_eimi_3s(backend):
     result = backend.inflect("εἰμί", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Act", "Mood": "Ind", "Person": "3", "Number": "Sing"}, "verb")
     assert result

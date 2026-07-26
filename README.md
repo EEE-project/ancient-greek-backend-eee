@@ -160,10 +160,18 @@ uv run pytest
 
 ## Status
 
-v0.7.0 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
+v0.7.1 — `inflect()`, `paradigm()`, `list_lemmas()`, `get_slot_templates()`, and `analyze()` for verbs, nouns, adjectives, and pronouns.
 Verb and noun coverage depends on the selected lexicon(s); adjectives use the Pratt paradigm lexicon.
 Adjective paradigms include adverb derivation: regular `-ος/-ός` → `-ῶς` (e.g. `καλός` → `καλῶς`),
 accessible via the `"ADV"` key in `paradigm()` or the `"ag-paradigm"` tag type in slot templates.
+
+**v0.7.1** — `_build_verb_paradigm`'s dual-number sweep now prunes against
+`get_tags("verb")`'s own tag list instead of trying every tense/voice/mood
+combination for 2D/3D and discarding empties: only 9 of ~120 dual attempts
+per lemma ever have real stemming data (`verb-tags.tsv`'s 9 dual rows) — the
+other ~111 were guaranteed-empty `.generate()` calls made every time. No
+behavior change (same 9 combinations still resolve, everything else still
+correctly returns empty); pure efficiency fix.
 
 **v0.7.0** — Added `AncientGreekBackend.for_period(*periods, extra_lexicons=())`:
 constructs a backend from one or more named historical periods (`"epic"`,
