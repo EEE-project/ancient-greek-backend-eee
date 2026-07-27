@@ -48,7 +48,7 @@ _PRON_PERSONAL_PERSONS = "12"
 _PERSONAL_PRONOUN_LEMMAS = {"ἐγώ", "σύ"}
 
 # Indicative tense/voice/mood combinations for verb paradigm
-_VERB_TENSES  = list("PIAFX")   # Pres, Imp, Aor, Fut, Perf
+_VERB_TENSES  = list("PIAFXY")   # Pres, Imp, Aor, Fut, Perf, Pluperf
 _VERB_VOICES  = list("AMP")
 # No "1D": Ancient Greek has no first-person dual. 2D/3D are candidates for
 # every tense/voice/mood combination here (same as every other person), but

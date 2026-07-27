@@ -38,6 +38,11 @@ def test_verb_aor_pass_ind_1s(backend):
     assert "ἐλύθην" in result
 
 
+def test_verb_pqp_act_ind_1s(backend):
+    result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pqp", "Voice": "Act", "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
+    assert "ἐλελύκη" in result
+
+
 def test_verb_midpass_union_nonempty(backend):
     result = backend.inflect("λύω", {"VerbForm": "Fin", "Tense": "Pres", "Voice": "Mid,Pass", "Mood": "Ind", "Person": "1", "Number": "Sing"}, "verb")
     assert isinstance(result, set)
@@ -90,6 +95,17 @@ def test_build_verb_paradigm_prunes_dual_sweep_to_9_known_combos():
     valid_dual_tags = {row["tag"] for row in b.get_tags("verb") if row["tag"].split(".")[-1] in ("2D", "3D")}
     assert dual_keys_tried == valid_dual_tags
     assert len(dual_keys_tried) == 9
+
+
+def test_build_verb_paradigm_includes_pluperfect_odyssey_morpheus_overrides():
+    """Regression test for a real bug (2026-07-27): _VERB_TENSES omitted
+    "Y" entirely, so .paradigm() never requested any pluperfect cell for
+    any verb -- even for ἄνωγα/ὄρνυμι, whose odyssey_morpheus_verbs_lexicon
+    forms: overrides for YAI.1S/YAI.3S already existed and were correct,
+    just permanently unreachable via this path."""
+    b = AncientGreekBackend.for_period("epic", extra_lexicons=["odyssey_morpheus"])
+    assert b.paradigm("ἄνωγα", "verb").get("YAI.1S") == {"ἠνώγεα"}
+    assert b.paradigm("ὄρνυμι", "verb").get("YAI.3S") == {"ὀρώρει"}
 
 
 def test_verb_eimi_3s(backend):
@@ -317,8 +333,11 @@ def test_get_tags_verb_row_count(backend):
     # 88 base rows + 9 dual (2D/3D for the tense/voice combos the engine
     # actually supports: PAI/IAI/FAI/XAI indicative + PAD imperative --
     # aorist and middle/passive dual have zero rule coverage in the
-    # stemming engine, so they're deliberately not included here).
-    assert len(backend.get_tags("verb")) == 97
+    # stemming engine, so they're deliberately not included here) + 6
+    # pluperfect active indicative (YAI.1S/2S/3S/1P/2P/3P -- Active-only,
+    # same curation as XAI/perfect above; no dual pluperfect rule coverage
+    # either, confirmed empirically before deciding to leave YAI dual out).
+    assert len(backend.get_tags("verb")) == 103
 
 
 def test_get_tags_unknown_pos_returns_empty(backend):
@@ -612,6 +631,12 @@ def test_get_slot_templates_verb_includes_dual(backend):
     tags = {s.tag for s in result}
     assert {"PAI.2D", "PAI.3D", "IAI.2D", "IAI.3D", "FAI.2D", "FAI.3D",
             "XAI.2D", "XAI.3D", "PAD.2D"} <= tags
+
+
+def test_get_slot_templates_verb_includes_pluperfect(backend):
+    result = backend.get_slot_templates("grc", "verb", "en")
+    tags = {s.tag for s in result}
+    assert {"YAI.1S", "YAI.2S", "YAI.3S", "YAI.1P", "YAI.2P", "YAI.3P"} <= tags
 
 
 def test_get_slot_templates_verb_pai2d_has_ud_features(backend):

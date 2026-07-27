@@ -68,6 +68,12 @@ XAI.2P	Perf	Fin	Act	Ind	2	Plur
 XAI.3P	Perf	Fin	Act	Ind	3	Plur
 XAI.2D	Perf	Fin	Act	Ind	2	Dual
 XAI.3D	Perf	Fin	Act	Ind	3	Dual
+YAI.1S	Pqp	Fin	Act	Ind	1	Sing
+YAI.2S	Pqp	Fin	Act	Ind	2	Sing
+YAI.3S	Pqp	Fin	Act	Ind	3	Sing
+YAI.1P	Pqp	Fin	Act	Ind	1	Plur
+YAI.2P	Pqp	Fin	Act	Ind	2	Plur
+YAI.3P	Pqp	Fin	Act	Ind	3	Plur
 PMI.1S	Pres	Fin	Mid	Ind	1	Sing
 PMI.2S	Pres	Fin	Mid	Ind	2	Sing
 PMI.3S	Pres	Fin	Mid	Ind	3	Sing
