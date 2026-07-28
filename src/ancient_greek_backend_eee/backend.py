@@ -82,8 +82,13 @@ _PERIOD_PRESETS: dict[str, tuple[str, ...]] = {
     "attic": ("pratt", "ltrg", "lsj"),
     "hellenistic_koine": ("lxx",),
     "roman_koine": ("morphgnt",),
-    "byzantine": ("lxx", "morphgnt", "pratt", "ltrg", "lsj", "byzantine"),
 }
+# Derived, not hand-copied, so it can't silently drift from the 3 presets
+# it merges onto -- the same drift risk this whole dict exists to prevent.
+_PERIOD_PRESETS["byzantine"] = (
+    _PERIOD_PRESETS["hellenistic_koine"] + _PERIOD_PRESETS["roman_koine"]
+    + _PERIOD_PRESETS["attic"] + ("byzantine",)
+)
 
 
 class AncientGreekBackend:
@@ -536,7 +541,10 @@ class AncientGreekBackend:
                 self._paradigm_cache[cache_key] = self._build_nominal_cache(lemma, pos)
             return dict(self._paradigm_cache[cache_key])
         if pos == "verb":
-            return self._build_verb_paradigm(lemma)
+            cache_key = (lemma, pos)
+            if cache_key not in self._paradigm_cache:
+                self._paradigm_cache[cache_key] = self._build_verb_paradigm(lemma)
+            return dict(self._paradigm_cache[cache_key])
         if pos == "pronoun":
             return dict(self._get_pronoun_cache(lemma))
         raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
