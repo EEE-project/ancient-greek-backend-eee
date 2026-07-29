@@ -130,6 +130,11 @@ Auto-registered via two entry point groups on install:
 This means `eee.inflect(..., language="grc")` and `eee.inflect(..., backend="ancient-greek")`
 both work without explicit registration.
 
+For `grc`, [unimorph-backend-eee](https://codeberg.org/EEE-project/unimorph-backend-eee)
+is the other available backend. Coverage is complementary rather than one
+superseding the other: θεός is in this package only; βοηθός is in `unimorph`
+only.
+
 
 ## Implementation
 
