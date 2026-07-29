@@ -35,6 +35,11 @@ accentuation engine — see the period column in the lexicon tables below.
 ## Installation
 
 ```bash
+pip install ancient-greek-backend-eee
+```
+
+Development version (latest, from Codeberg):
+```bash
 pip install "ancient-greek-backend-eee @ git+https://codeberg.org/EEE-project/ancient-greek-backend-eee.git"
 ```
 
