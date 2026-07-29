@@ -5,6 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ancient-greek-backend-eee"
 version = "1.0.0"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "greek-inflexion-eee>=1.0.0",
