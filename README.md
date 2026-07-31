@@ -127,6 +127,16 @@ irregular/suppletive nouns (Ζεύς).
 
 Multiple names are merged additively. Absolute file paths load custom YAML lexicons.
 
+The same `lexicons` list is shared across every part of speech, even
+though not every name applies to every one (e.g. pronouns have no named
+lexicons at all yet) — a name irrelevant to the part of speech currently
+being asked about is fine and silently ignored, but a name that isn't
+registered *anywhere* raises `ValueError` (2026-07-31), regardless of
+which part of speech happens to be queried first. This used to silently
+degrade coverage with no signal at all — the exact failure shape when a
+lexicon name gets removed (as `"odyssey_morpheus"` was) while some caller
+still references it by name.
+
 
 Auto-registered via two entry point groups on install:
 - `eee_project.backends.v1` → key `grc` (default backend for Ancient Greek)

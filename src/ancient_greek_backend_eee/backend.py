@@ -1,5 +1,6 @@
 import csv
 import importlib.resources as _pkg_data
+import os
 
 from ancient_greek_backend_eee._ag_features import ag_verb_key, ag_noun_key, ag_adj_key, ag_pron_key, CSG_TAG_PREFIX
 
@@ -109,7 +110,7 @@ class AncientGreekBackend:
     separate branches in inflect/paradigm (their per-pos logic genuinely
     differs) rather than routed through a dict of pos-name -> handler.
     _get_gi/list_lemmas/get_slot_templates/get_tags are pos-generic
-    (dispatch via _loaders()/_POS_TSV), so a new pos only needs new
+    (dispatch via _pos_registry()/_POS_TSV), so a new pos only needs new
     branches in inflect/paradigm, not five separate edits.
     """
 
@@ -133,7 +134,7 @@ class AncientGreekBackend:
         """Construct a backend from one or more named historical periods.
 
         Lexicon merging is a set union (confirmed via greek_inflexion_eee's
-        load_lexicons: "later entries add new stems without removing
+        load_verb_lexicons: "later entries add new stems without removing
         existing ones"), so the order periods are listed in doesn't affect
         the result -- multiple periods can be combined freely for a
         broader-coverage backend (e.g. a "recognize anything" union across
@@ -159,19 +160,76 @@ class AncientGreekBackend:
         return cls(lexicons=lexicons + list(extra_lexicons))
 
     @staticmethod
-    def _loaders():
-        from greek_inflexion_eee import load_lexicons, load_noun_lexicons, load_adj_lexicons, load_pron_lexicons
+    def _pos_registry():
+        """Map pos -> (loader, known-names getter), one dict instead of two.
+
+        2026-07-31: previously two separately hand-maintained 4-key dicts
+        (_loaders/_known_lexicon_getters) with the same keys in the same
+        order -- nothing guaranteed they'd stay in sync, and a drift (a
+        5th pos added to one but not the other) would have surfaced as a
+        raw, unhandled KeyError from inside _relevant_lexicons rather than
+        the clean, intentional ValueError this whole change exists to
+        guarantee. One dict can't drift from itself.
+        """
+        from greek_inflexion_eee import (
+            load_verb_lexicons, load_noun_lexicons, load_adj_lexicons, load_pron_lexicons,
+            known_verb_lexicons, known_noun_lexicons, known_adj_lexicons, known_pron_lexicons,
+        )
         return {
-            "verb": load_lexicons, "noun": load_noun_lexicons,
-            "adjective": load_adj_lexicons, "pronoun": load_pron_lexicons,
+            "verb": (load_verb_lexicons, known_verb_lexicons),
+            "noun": (load_noun_lexicons, known_noun_lexicons),
+            "adjective": (load_adj_lexicons, known_adj_lexicons),
+            "pronoun": (load_pron_lexicons, known_pron_lexicons),
         }
 
+    def _relevant_lexicons(self, pos: str, registry: dict) -> list[str]:
+        """Filter self._lexicons down to what's actually relevant to *pos*.
+
+        self._lexicons is ONE general-purpose list shared across every
+        part of speech (e.g. "homer" is meaningful for verb/noun but not
+        pronoun, which has no named lexicons at all yet) -- each
+        greek_inflexion_eee loader now raises on a name it doesn't
+        recognize (2026-07-31: it used to silently drop one instead, which
+        is what let a removed name like the former "odyssey_morpheus" go
+        unnoticed by every caller still passing it). So THIS layer, not
+        the loader, is responsible for filtering the shared list down to
+        what's actually relevant to *this* pos before calling its loader
+        -- but the filter must NOT itself become a second place a genuine
+        mistake goes silent: a name known to some OTHER pos's registry
+        (e.g. "homer" when pos="pronoun") is legitimately not an error and
+        gets dropped here; a name known to NO pos's registry at all (a
+        typo, or a removed name like the former "odyssey_morpheus") is a
+        real mistake regardless of which pos happens to be queried first,
+        and must reach the loader so IT raises -- silently dropping it
+        here would just move the exact bug this whole change exists to
+        fix to a new layer.
+
+        *registry* is the caller's already-fetched _pos_registry() --
+        passed in rather than refetched here so pos's own known-names
+        getter isn't called twice (once for known_here, again inside the
+        union for known_anywhere).
+
+        Every call site that invokes a POS-specific loader (currently
+        _get_gi and list_lemmas -- the latter deliberately bypasses
+        _get_gi/_gi_cache for its own documented reason, see its own
+        comment) must route self._lexicons through this first, not call
+        a loader with the raw list directly.
+        """
+        known_by_pos = {p: known() for p, (_loader, known) in registry.items()}
+        known_here = known_by_pos[pos]
+        known_anywhere = frozenset(n for names in known_by_pos.values() for n in names)
+        return [
+            n for n in self._lexicons
+            if os.path.isabs(n) or n in known_here or n not in known_anywhere
+        ]
+
     def _get_gi(self, pos: str):
-        loaders = self._loaders()
-        if pos not in loaders:
+        registry = self._pos_registry()
+        if pos not in registry:
             raise ValueError(f"Unknown pos: {pos!r}. Expected 'verb', 'noun', 'adjective', or 'pronoun'.")
         if pos not in self._gi_cache:
-            self._gi_cache[pos] = loaders[pos](list(self._lexicons))
+            loader, _known = registry[pos]
+            self._gi_cache[pos] = loader(self._relevant_lexicons(pos, registry))
         return self._gi_cache[pos]
 
     def inflect(self, lemma: str, features: dict[str, str], pos: str, **_kw) -> set[str]:
@@ -523,7 +581,9 @@ class AncientGreekBackend:
             # own independent copy rather than trusting the shared cache -- and
             # caches *that* result separately, in a dict .generate()/.paradigm()
             # never write to, so repeat calls don't pay for a fresh YAML reload.
-            gi = self._loaders()[pos](list(self._lexicons))
+            registry = self._pos_registry()
+            loader, _known = registry[pos]
+            gi = loader(self._relevant_lexicons(pos, registry))
             lemmas = set(gi.lexicon.lemma_to_stems.keys())
             lemmas.update(lemma for lemma, _ in gi.form_override.keys())
             self._lemma_cache[pos] = sorted(lemmas)

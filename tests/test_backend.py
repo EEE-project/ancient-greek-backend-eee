@@ -97,15 +97,20 @@ def test_build_verb_paradigm_prunes_dual_sweep_to_9_known_combos():
     assert len(dual_keys_tried) == 9
 
 
-def test_build_verb_paradigm_includes_pluperfect_odyssey_morpheus_overrides():
+def test_build_verb_paradigm_includes_pluperfect_forms():
     """Regression test for a real bug (2026-07-27): _VERB_TENSES omitted
     "Y" entirely, so .paradigm() never requested any pluperfect cell for
-    any verb -- even for ἄνωγα/ὄρνυμι, whose odyssey_morpheus_verbs_lexicon
-    forms: overrides for YAI.1S/YAI.3S already existed and were correct,
-    just permanently unreachable via this path."""
-    b = AncientGreekBackend.for_period("epic", extra_lexicons=["odyssey_morpheus"])
-    assert b.paradigm("ἄνωγα", "verb").get("YAI.1S") == {"ἠνώγεα"}
-    assert b.paradigm("ὄρνυμι", "verb").get("YAI.3S") == {"ὀρώρει"}
+    any verb -- even ones with a real forms: override for it, like εἴδω's
+    YAI.1P in the bundled homer lexicon.
+
+    Originally used odyssey_morpheus_verbs_lexicon's ἄνωγα/ὄρνυμι overrides
+    for the same purpose; rewritten 2026-07-31 when that course-specific
+    lexicon moved out of this package (see greek-inflexion-eee's own
+    README/AGENTS.md for the courses' own copies) -- εἴδω/homer is a
+    bundled, cross-course lexicon, so this test no longer depends on
+    course-local data living in the right place at test time."""
+    b = AncientGreekBackend.for_period("epic")
+    assert b.paradigm("εἴδω", "verb").get("YAI.1P") == {"ἴδμεν"}
 
 
 def test_verb_eimi_3s(backend):
@@ -568,8 +573,11 @@ def test_for_period_epic_matches_hand_written_list():
 
 
 def test_for_period_extra_lexicons_appended_after_preset():
-    b = AncientGreekBackend.for_period("epic", extra_lexicons=["odyssey_morpheus"])
-    assert b._lexicons == ("homer", "odyssey_morpheus")
+    """Pure ordering/appending mechanism test -- the placeholder name below
+    doesn't need to resolve to anything (this checks for_period()'s own
+    tuple construction, not lexicon resolution), so any string works."""
+    b = AncientGreekBackend.for_period("epic", extra_lexicons=["some_course_lexicon"])
+    assert b._lexicons == ("homer", "some_course_lexicon")
 
 
 def test_for_period_unknown_period_raises():
@@ -584,8 +592,41 @@ def test_for_period_no_periods_raises():
 
 def test_for_period_multiple_periods_union_with_extra():
     b = AncientGreekBackend.for_period("epic", "attic", "hellenistic_koine", "roman_koine",
-                                        extra_lexicons=["odyssey_morpheus"])
-    assert b._lexicons == ("homer", "pratt", "ltrg", "lsj", "lxx", "morphgnt", "odyssey_morpheus")
+                                        extra_lexicons=["some_course_lexicon"])
+    assert b._lexicons == ("homer", "pratt", "ltrg", "lsj", "lxx", "morphgnt", "some_course_lexicon")
+
+
+def test_relevant_lexicons_drops_names_valid_only_for_other_pos():
+    """A shared lexicons=[...] list is meaningful for verb/noun/adjective
+    but has nothing registered for pronoun -- "homer" etc. must be
+    silently dropped for pos="pronoun" rather than raising, since it's a
+    real, valid name (just not for this pos), not a mistake."""
+    b = AncientGreekBackend.for_period("epic", "attic", "hellenistic_koine", "roman_koine")
+    registry = b._pos_registry()
+    assert b._relevant_lexicons("pronoun", registry) == []
+    assert set(b._relevant_lexicons("verb", registry)) == {"homer", "pratt", "ltrg", "lsj", "lxx", "morphgnt"}
+
+
+def test_relevant_lexicons_keeps_name_unknown_to_every_pos():
+    """A name registered by NO pos's registry at all (a typo, or a
+    removed name like the former "odyssey_morpheus") is a real mistake
+    regardless of which pos happens to be queried -- must reach the
+    loader (which raises) rather than being silently dropped here too."""
+    b = AncientGreekBackend(lexicons=["homer", "totally_made_up_name"])
+    registry = b._pos_registry()
+    assert "totally_made_up_name" in b._relevant_lexicons("verb", registry)
+    assert "totally_made_up_name" in b._relevant_lexicons("pronoun", registry)
+    with pytest.raises(ValueError, match="totally_made_up_name"):
+        b.paradigm("λύω", "verb")
+
+
+def test_relevant_lexicons_raises_reaches_list_lemmas_too():
+    """list_lemmas() deliberately bypasses _get_gi/_gi_cache (see its own
+    docstring comment) -- confirm it still routes through the same
+    _relevant_lexicons() filtering, not the raw self._lexicons list."""
+    b = AncientGreekBackend(lexicons=["totally_made_up_name"])
+    with pytest.raises(ValueError, match="totally_made_up_name"):
+        b.list_lemmas("pronoun")
 
 
 def test_for_period_multiple_periods_produces_same_lemmas_regardless_of_order():
