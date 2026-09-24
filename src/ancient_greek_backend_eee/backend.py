@@ -209,11 +209,9 @@ class AncientGreekBackend:
         getter isn't called twice (once for known_here, again inside the
         union for known_anywhere).
 
-        Every call site that invokes a POS-specific loader (currently
-        _get_gi and list_lemmas -- the latter deliberately bypasses
-        _get_gi/_gi_cache for its own documented reason, see its own
-        comment) must route self._lexicons through this first, not call
-        a loader with the raw list directly.
+        Every call site that invokes a POS-specific loader (currently just
+        _get_gi) must route self._lexicons through this first, not call a
+        loader with the raw list directly.
         """
         known_by_pos = {p: known() for p, (_loader, known) in registry.items()}
         known_here = known_by_pos[pos]
@@ -568,25 +566,7 @@ class AncientGreekBackend:
         if pos not in ("verb", "noun", "adjective", "pronoun"):
             return []
         if pos not in self._lemma_cache:
-            # A fresh, uncached load -- NOT self._get_gi(pos)/self._gi_cache[pos].
-            # Querying .generate()/.inflect() for a lemma absent from the loaded
-            # lexicon has a documented side effect upstream (inflexion library):
-            # it can add a phantom stem entry to the shared Lexicon object for
-            # that lemma. Once this instance's cached _gi_cache[pos] has been used
-            # for any such query (e.g. paradigm() called for lemmas outside this
-            # lexicon, as a tagging/coverage loop over a full vocabulary would),
-            # gi.lexicon.lemma_to_stems no longer reflects only what the bundled
-            # YAML actually contains. list_lemmas must stay correct regardless of
-            # what this instance has already been asked about, so it computes its
-            # own independent copy rather than trusting the shared cache -- and
-            # caches *that* result separately, in a dict .generate()/.paradigm()
-            # never write to, so repeat calls don't pay for a fresh YAML reload.
-            registry = self._pos_registry()
-            loader, _known = registry[pos]
-            gi = loader(self._relevant_lexicons(pos, registry))
-            lemmas = set(gi.lexicon.lemma_to_stems.keys())
-            lemmas.update(lemma for lemma, _ in gi.form_override.keys())
-            self._lemma_cache[pos] = sorted(lemmas)
+            self._lemma_cache[pos] = sorted(self._get_gi(pos).known_lemmas())
         return self._lemma_cache[pos]
 
     def paradigm(self, lemma: str, pos: str) -> dict[str, set[str]]:

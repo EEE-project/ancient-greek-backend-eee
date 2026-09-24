@@ -524,7 +524,6 @@ def test_list_lemmas_unaffected_by_prior_paradigm_queries():
     exactly what the bundled YAML contains, regardless of what this instance
     has already been asked about."""
     b = AncientGreekBackend(lexicons=["byzantine"])
-    before = set(b.list_lemmas("verb"))
 
     # λύω/πράττω/χράομαι and both nouns are confirmed absent from the
     # byzantine lexicon (unlike the previous εἰμί/λέγω picks, which the
@@ -535,7 +534,7 @@ def test_list_lemmas_unaffected_by_prior_paradigm_queries():
         b.paradigm(unrelated_lemma, pos)
 
     after = set(b.list_lemmas("verb"))
-    assert after == before
+    assert after == set(AncientGreekBackend(lexicons=["byzantine"]).list_lemmas("verb"))
     assert "λύω" not in after
     assert "πράττω" not in after
 
@@ -621,9 +620,8 @@ def test_relevant_lexicons_keeps_name_unknown_to_every_pos():
 
 
 def test_relevant_lexicons_raises_reaches_list_lemmas_too():
-    """list_lemmas() deliberately bypasses _get_gi/_gi_cache (see its own
-    docstring comment) -- confirm it still routes through the same
-    _relevant_lexicons() filtering, not the raw self._lexicons list."""
+    """list_lemmas() routes through the same _relevant_lexicons() filtering,
+    not the raw self._lexicons list."""
     b = AncientGreekBackend(lexicons=["totally_made_up_name"])
     with pytest.raises(ValueError, match="totally_made_up_name"):
         b.list_lemmas("pronoun")
@@ -711,15 +709,10 @@ def homer_backend():
     return AncientGreekBackend(lexicons=["homer", "lxx", "morphgnt"])
 
 
-@pytest.mark.parametrize("lemma", [
-    "θάνατος", "μόρος", "ἄνεμος", "ἑταῖρος",
-    "νῆσος", "ἤπειρος", "μάχη",
-    "μῆλον", "φύλλον", "αἶσα",
-    "ἄλγος", "ἄνθος", "κτῆμα", "γείτων", "βοῦς",
-])
-def test_homer_noun_has_forms(homer_backend, lemma):
-    p = homer_backend.paradigm(lemma, "noun")
-    assert p, f"{lemma!r} returned empty paradigm"
+def test_every_listed_noun_lemma_has_paradigm(homer_backend):
+    empty = [lemma for lemma in homer_backend.list_lemmas("noun")
+             if not homer_backend.paradigm(lemma, "noun")]
+    assert not empty, f"empty paradigm for: {empty}"
 
 
 def test_homer_noun_thanatos_nsm(homer_backend):

@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ancient-greek-backend-eee"
-version = "2.0.0"
+version = "2.0.1"
 description = "Ancient Greek morphology backend for the EEE project"
 readme = "README.md"
 license = "Apache-2.0"
 authors = [{name = "Oleg Sadov", email = "oleg.sadov@gmail.com"}]
 requires-python = ">=3.12"
 dependencies = [
-    "greek-inflexion-eee>=3.0.0",
+    "greek-inflexion-eee>=3.1.0",
 ]
 
 [project.urls]
